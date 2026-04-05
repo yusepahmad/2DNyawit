@@ -15,6 +15,7 @@ import javax.swing.JPanel;
 
 import com.uph_lpjk.sawit2d.entity.Entity;
 import com.uph_lpjk.sawit2d.entity.Player;
+import com.uph_lpjk.sawit2d.interactive.tile.InteractiveTile;
 import com.uph_lpjk.sawit2d.tile.TileManager;
 
 public class GamePanel extends JPanel implements Runnable {
@@ -57,6 +58,7 @@ public class GamePanel extends JPanel implements Runnable {
     final private Player player = new Player(this, keyH);
     final private Entity obj[] = new Entity[20];
     
+    private InteractiveTile iTile[] = new InteractiveTile[900];
     final private ArrayList<Entity> entityList = new ArrayList<>();
     
     final private CollisionChecker cChecker = new CollisionChecker(this);
@@ -128,6 +130,14 @@ public class GamePanel extends JPanel implements Runnable {
         this.ui.addMessage(text);
     }
 
+    public int getUICommandNum() {
+        return this.ui.getCommandNum();
+    }
+
+    public void setUICommandNum(int num) {
+        this.ui.setCommandNum(num);
+    }
+
     // PLAYER
 
     public int getPlayerWorldX() {
@@ -154,6 +164,10 @@ public class GamePanel extends JPanel implements Runnable {
         this.player.setGold(gold);
     }
 
+    public BufferedImage getPlayerDown1() {
+        return this.player.getDown1();
+    }
+
     // TILE MANAGER
 
     public void loadMap() {
@@ -166,6 +180,11 @@ public class GamePanel extends JPanel implements Runnable {
 
     public boolean getTileCollision(int i) {
         return this.tileM.getTileCollision(i);
+    }
+
+    // INTERACTIVE TILE
+    public void setInteractiveTile(int i, InteractiveTile iTile) {
+        this.iTile[i] = iTile;
     }
 
     // ENTITY OBJECT
@@ -266,7 +285,8 @@ public class GamePanel extends JPanel implements Runnable {
 
     public void setupGame() {
         this.aSetter.setObject();
-        this.gameState = GamePanel.State.PLAY;
+        this.aSetter.setInteractiveTile();
+        this.gameState = GamePanel.State.TITLE;
 
         tempScreen = new BufferedImage(screenWidth, screenHeight, BufferedImage.TYPE_INT_ARGB);
         g2 = (Graphics2D)tempScreen.getGraphics();
@@ -308,6 +328,12 @@ public class GamePanel extends JPanel implements Runnable {
         if(this.gameState == GamePanel.State.PLAY) {
             // PLAYER
             player.update();
+
+            for(int i = 0; i < this.iTile.length; i++) {
+                if(this.iTile[i] != null) {
+                    this.iTile[i].update();
+                }
+            }
         }
         if(this.gameState == GamePanel.State.PAUSE) {
             // NOTHING
@@ -315,8 +341,21 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void drawToTempScreen() {
+        // DEBUG
+        long drawStart = 0;
+        if (this.keyH.getShowDebugText() == true) {
+            drawStart = System.nanoTime();
+        }
+
         // TILE
         tileM.draw(g2);
+
+        // INTERACTIVE TILE
+        for(int i = 0; i < this.iTile.length; i++) {
+            if(this.iTile[i] != null) {
+                this.iTile[i].draw(g2);
+            }
+        }
 
         // ADD ENTITY TO THE LIST
         this.entityList.add(this.player);
@@ -345,6 +384,24 @@ public class GamePanel extends JPanel implements Runnable {
 
         // EMPTY ENTITY LIST
         this.entityList.clear();
+
+        // DEBUG
+        if (this.keyH.getShowDebugText() == true) {
+            long drawEnd = System.nanoTime();
+            long passed = drawEnd - drawStart;
+
+            g2.setFont(new Font("Arial", Font.PLAIN, 20));
+            g2.setColor(Color.white);
+            int x = 10;
+            int y = 400;
+            int lineHeight = 20;
+
+            g2.drawString("WorldX: " + this.player.getWorldX(), x, y); y += lineHeight;
+            g2.drawString("WorldY: " + this.player.getWorldY(), x, y); y += lineHeight;
+            g2.drawString("Col: " + (this.player.getWorldX() + this.player.getSolidAreaX()) / tileSize, x, y); y += lineHeight;
+            g2.drawString("Row: " + (this.player.getWorldY() + this.player.getSolidAreaY()) / tileSize, x, y); y += lineHeight;
+            g2.drawString("Draw Time: " + passed, x, y); y += lineHeight;
+        }
     }
 
     public void drawToScreen() {

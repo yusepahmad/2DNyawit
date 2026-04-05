@@ -16,8 +16,8 @@ public class ObjGold extends Entity {
         setType(type_pickupOnly);
         setName("Gold");
         setValue(1);
-        down1 = setup("/objects/gold/coin_bronze", this.gp.getTileSize(), this.gp.getTileSize());
-        image = setup("/objects/gold/coin_bronze", this.gp.getTileSize(), this.gp.getTileSize());
+        down1 = setup("/objects/gold/goldie", this.gp.getTileSize(), this.gp.getTileSize());
+        image = setup("/objects/gold/goldie", this.gp.getTileSize(), this.gp.getTileSize());
     }
 
     @Override

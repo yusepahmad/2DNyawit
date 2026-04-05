@@ -36,6 +36,7 @@ public class Entity {
 
     // ATTRIBUTES OBJECT / CHARACTER
     private String name;
+    private int life;
     private int gold;
 
     // ITEM ATTRIBUTES
@@ -57,6 +58,7 @@ public class Entity {
     }
     
     public void use(Entity entity) {}
+    public BufferedImage getDown1() { return this.down1; }
     public BufferedImage getImage() { return this.image; }
     public BufferedImage getImage2() { return this.image2; }
     public BufferedImage getImage3() { return this.image3; }
@@ -165,6 +167,14 @@ public class Entity {
 
     public String getName() {
         return this.name;
+    }
+
+    public void setLife(int life) {
+        this.life = life;
+    }
+
+    public int getLife() {
+        return this.life;
     }
 
     public void setGold(int gold) {

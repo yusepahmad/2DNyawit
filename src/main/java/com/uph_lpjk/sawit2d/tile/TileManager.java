@@ -88,8 +88,6 @@ public class TileManager {
         setup(42, "hut", false);
         setup(43, "floor01", false);
         setup(44, "table01", true);
-        setup(45, "tiles_interactive", "drytree", true);
-        setup(46, "tiles_interactive", "trunk", true);
     }
 
     private void setup(int index, String imageName, boolean collision) {

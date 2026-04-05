@@ -69,7 +69,30 @@ public class KeyHandler implements KeyListener {
     public void keyTyped(KeyEvent e) {}
 
     private void titleState(int code) {
-
+        if(code == KeyEvent.VK_W) {
+            this.gp.setUICommandNum(this.gp.getUICommandNum() - 1);
+            if(this.gp.getUICommandNum() < 0) {
+                this.gp.setUICommandNum(2);
+            }
+        }
+        if(code == KeyEvent.VK_S) {
+            this.gp.setUICommandNum(this.gp.getUICommandNum() + 1);
+            if(this.gp.getUICommandNum() > 2) {
+                this.gp.setUICommandNum(0);
+            }
+        }
+        if(code == KeyEvent.VK_ENTER) {
+            if(this.gp.getUICommandNum() == 0) {
+                this.gp.setGameState(GamePanel.State.PLAY);
+                gp.playMusic(0);
+            }
+            if(this.gp.getUICommandNum() == 1) {
+                // NOTHING
+            }
+            if(this.gp.getUICommandNum() == 2) {
+                System.exit(0);
+            }
+        }
     }
 
     private void playState(int code) {
