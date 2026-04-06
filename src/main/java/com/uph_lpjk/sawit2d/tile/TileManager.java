@@ -20,6 +20,7 @@ public class TileManager {
 
     protected Tile[] tile;
     protected int mapTileNum[][];
+    protected int objectMapTileNum[][];
 
     public TileManager(GamePanel gp) {
         this.gp = gp;
@@ -29,9 +30,10 @@ public class TileManager {
 
         this.tile = new Tile[50];
         this.mapTileNum = new int[this.maxWorldCol][this.maxWorldRow];
+        this.objectMapTileNum = new int[this.maxWorldCol][this.maxWorldRow];
 
         getTileImage();
-        loadMap("sawit_land");
+        loadMap("farm_land");
     }
 
     public int getMapTileNum(int col, int row) {
@@ -108,6 +110,11 @@ public class TileManager {
     }
 
     public void loadMap(String mapName) {
+        if ("farm_land".equals(mapName)) {
+            createFarmMap();
+            return;
+        }
+
         try {
             InputStream inputStream = getClass().getResourceAsStream("/maps/" + mapName + ".txt");
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
@@ -131,6 +138,60 @@ public class TileManager {
             bufferedReader.close();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private void createFarmMap() {
+        java.util.Random random = new java.util.Random(42);
+
+        for (int row = 0; row < this.maxWorldRow; row++) {
+            for (int col = 0; col < this.maxWorldCol; col++) {
+                this.mapTileNum[col][row] = 10;
+                this.objectMapTileNum[col][row] = 0;
+            }
+        }
+
+        // Outer tree belt and decoration zone.
+        for (int row = 0; row < this.maxWorldRow; row++) {
+            for (int col = 0; col < this.maxWorldCol; col++) {
+                boolean outerBand = row < 7 || row > 42 || col < 7 || col > 42;
+                if (outerBand && random.nextDouble() < 0.72) {
+                    this.objectMapTileNum[col][row] = 41;
+                }
+            }
+        }
+
+        // Large farming plot in the middle of the world.
+        for (int row = 8; row <= 41; row++) {
+            for (int col = 8; col <= 41; col++) {
+                this.mapTileNum[col][row] = 39;
+            }
+        }
+
+        // Walkable dirt border around the farm.
+        for (int row = 7; row <= 42; row++) {
+            this.mapTileNum[7][row] = 26;
+            this.mapTileNum[42][row] = 26;
+        }
+        for (int col = 7; col <= 42; col++) {
+            this.mapTileNum[col][7] = 26;
+            this.mapTileNum[col][42] = 26;
+        }
+
+        // Decorative house block.
+        this.objectMapTileNum[4][4] = 42;
+        this.objectMapTileNum[4][5] = 43;
+        this.objectMapTileNum[5][4] = 43;
+        this.objectMapTileNum[5][5] = 43;
+
+        // Clear sight lines near the house entrance.
+        for (int row = 3; row <= 7; row++) {
+            for (int col = 3; col <= 7; col++) {
+                if (col == 4 || col == 5 || row == 4 || row == 5) {
+                    continue;
+                }
+                this.objectMapTileNum[col][row] = 41;
+            }
         }
     }
 
@@ -165,6 +226,37 @@ public class TileManager {
             if(worldCol == this.maxWorldCol) {
                 worldCol = 0;
                 worldRow++;
+            }
+        }
+    }
+
+    public void drawObjectLayer(Graphics2D g2) {
+        int cameraX = gp.getCameraX();
+        int cameraY = gp.getCameraY();
+        int screenWidth = gp.getScreenWidth();
+        int screenHeight = gp.getScreenHeight();
+
+        for (int row = 0; row < this.maxWorldRow; row++) {
+            for (int col = 0; col < this.maxWorldCol; col++) {
+                int tileNum = this.objectMapTileNum[col][row];
+                if (tileNum == 0) {
+                    continue;
+                }
+
+                int worldX = col * this.tileSize;
+                int worldY = row * this.tileSize;
+                if (
+                    worldX + this.tileSize < cameraX ||
+                    worldX - this.tileSize > cameraX + screenWidth ||
+                    worldY + this.tileSize < cameraY ||
+                    worldY - this.tileSize > cameraY + screenHeight
+                ) {
+                    continue;
+                }
+
+                int screenX = worldX - cameraX;
+                int screenY = worldY - cameraY;
+                g2.drawImage(this.tile[tileNum].image, screenX, screenY, null);
             }
         }
     }

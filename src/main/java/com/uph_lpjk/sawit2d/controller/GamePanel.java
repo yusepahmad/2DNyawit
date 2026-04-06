@@ -6,15 +6,20 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import com.uph_lpjk.sawit2d.entity.Entity;
 import com.uph_lpjk.sawit2d.entity.Player;
+import com.uph_lpjk.sawit2d.farm.GameState;
+import com.uph_lpjk.sawit2d.farm.FarmSystem;
 import com.uph_lpjk.sawit2d.interactive.tile.InteractiveTile;
 import com.uph_lpjk.sawit2d.tile.TileManager;
 
@@ -53,6 +58,7 @@ public class GamePanel extends JPanel implements Runnable {
     final private UserInterface ui = new UserInterface(this);
     final private Sound music = new Sound();
     final private Sound soundEffect = new Sound();
+    final private FarmSystem farmSystem = new FarmSystem(this);
 
     // ENTITY AND OBJECT
     final private Player player = new Player(this, keyH);
@@ -65,7 +71,7 @@ public class GamePanel extends JPanel implements Runnable {
     final private TileManager tileM = new TileManager(this);
 
     // GAME STATE
-    public enum State { TITLE, PLAY, PAUSE }
+    public enum State { TITLE, PLAY, PAUSE, GAME_OVER }
     private State gameState;
 
 
@@ -74,6 +80,19 @@ public class GamePanel extends JPanel implements Runnable {
         this.setBackground(Color.black);
         this.setDoubleBuffered(true);
         this.addKeyListener(keyH);
+        this.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                handleFarmMouseInput(e);
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    handleFarmMouseInput(e);
+                }
+            }
+        });
         this.setFocusable(true);
     }
 
@@ -128,6 +147,9 @@ public class GamePanel extends JPanel implements Runnable {
     // USER INTERFACE
     public void addUIMessage(String text) {
         this.ui.addMessage(text);
+        if (this.farmSystem != null && text != null) {
+            this.farmSystem.getGameState().setLastNotification(text);
+        }
     }
 
     public int getUICommandNum() {
@@ -148,6 +170,10 @@ public class GamePanel extends JPanel implements Runnable {
         return this.player.getWorldY();
     }
 
+    public Player getPlayer() {
+        return this.player;
+    }
+
     public int getPlayerScreenX() {
         return this.player.getScreenX();
     }
@@ -162,16 +188,42 @@ public class GamePanel extends JPanel implements Runnable {
 
     public void setPlayerGold(int gold) {
         this.player.setGold(gold);
+        if (this.player.getGold() < 0 && this.gameState != State.GAME_OVER) {
+            setGameOver("Gold habis. Game over.");
+        }
+    }
+
+    public FarmSystem getFarmSystem() {
+        return this.farmSystem;
+    }
+
+    public GameState getFarmState() {
+        return this.farmSystem.getGameState();
     }
 
     public BufferedImage getPlayerDown1() {
         return this.player.getDown1();
     }
 
+    private void handleFarmMouseInput(MouseEvent e) {
+        if (gameState == null || gameState != GamePanel.State.PLAY) {
+            return;
+        }
+
+        if (SwingUtilities.isLeftMouseButton(e)) {
+            farmSystem.interactAtScreenPoint(e.getX(), e.getY());
+            return;
+        }
+
+        if (SwingUtilities.isRightMouseButton(e) || e.isPopupTrigger()) {
+            farmSystem.toggleFirebreakAtScreenPoint(e.getX(), e.getY());
+        }
+    }
+
     // TILE MANAGER
 
     public void loadMap() {
-        this.tileM.loadMap("sawit_land");
+        this.tileM.loadMap("farm_land");
     }
 
     public int getMapTileNum(int col, int row) {
@@ -268,6 +320,25 @@ public class GamePanel extends JPanel implements Runnable {
         return this.gameState;
     }
 
+    public void setGameOver(String reason) {
+        this.gameState = State.GAME_OVER;
+        this.farmSystem.getGameState().setLastNotification(reason);
+        this.ui.addMessage(reason);
+        this.stopMusic();
+    }
+
+    public void returnHomeFromGameOver() {
+        this.player.resetToDefaultValues();
+        int currentGold = this.player.getGold();
+        if (currentGold != 1000) {
+            this.player.setGold(1000 - currentGold);
+        }
+        this.farmSystem.resetSession();
+        this.ui.resetNotifications();
+        this.ui.setCommandNum(0);
+        this.gameState = State.TITLE;
+    }
+
 
     public int getCameraX() {
         int cameraX = player.getWorldX() - player.getScreenX();
@@ -286,6 +357,9 @@ public class GamePanel extends JPanel implements Runnable {
     public void setupGame() {
         this.aSetter.setObject();
         this.aSetter.setInteractiveTile();
+        if (this.player.getGold() == 0) {
+            this.player.setGold(1000);
+        }
         this.gameState = GamePanel.State.TITLE;
 
         tempScreen = new BufferedImage(screenWidth, screenHeight, BufferedImage.TYPE_INT_ARGB);
@@ -329,6 +403,34 @@ public class GamePanel extends JPanel implements Runnable {
             // PLAYER
             player.update();
 
+            if (this.keyH.consumeAutoPlantPressed()) {
+                this.farmSystem.toggleAutoPlantMode();
+            }
+            if (this.keyH.consumeAutoSellPressed()) {
+                this.farmSystem.toggleAutoSellMode();
+            }
+            if (this.keyH.consumeAutoHarvestPressed()) {
+                this.farmSystem.toggleAutoHarvestMode();
+            }
+            if (this.keyH.consumeActionPressed()) {
+                this.farmSystem.interact(this.player);
+            }
+            if (this.keyH.consumeFirebreakPressed()) {
+                this.farmSystem.toggleFirebreakAtPlayer();
+            }
+            if (this.keyH.consumeNextDayPressed()) {
+                this.farmSystem.nextDay();
+            }
+            if (this.keyH.consumeSellPressed()) {
+                this.farmSystem.sellInventory();
+            }
+
+            this.farmSystem.update();
+
+            if (this.gameState == GamePanel.State.GAME_OVER) {
+                return;
+            }
+
             for(int i = 0; i < this.iTile.length; i++) {
                 if(this.iTile[i] != null) {
                     this.iTile[i].update();
@@ -336,6 +438,9 @@ public class GamePanel extends JPanel implements Runnable {
             }
         }
         if(this.gameState == GamePanel.State.PAUSE) {
+            // NOTHING
+        }
+        if(this.gameState == GamePanel.State.GAME_OVER) {
             // NOTHING
         }
     }
@@ -349,6 +454,12 @@ public class GamePanel extends JPanel implements Runnable {
 
         // TILE
         tileM.draw(g2);
+
+        // FARM SYSTEM OVERLAY
+        this.farmSystem.draw(g2);
+
+        // FIXED MAP OBJECTS
+        tileM.drawObjectLayer(g2);
 
         // INTERACTIVE TILE
         for(int i = 0; i < this.iTile.length; i++) {

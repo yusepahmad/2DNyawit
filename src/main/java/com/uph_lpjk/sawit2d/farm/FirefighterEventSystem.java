@@ -1,0 +1,183 @@
+package com.uph_lpjk.sawit2d.farm;
+
+import com.uph_lpjk.sawit2d.controller.GamePanel;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dialog;
+import java.awt.Font;
+import java.awt.Frame;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Window;
+import java.awt.event.ActionListener;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class FirefighterEventSystem {
+    private static final int FIREFIGHTER_COST = 30;
+
+    public FirefighterResponse promptHelp(GamePanel gp, GameState state) {
+        int option = showFirefighterDialog(gp);
+
+        if (option == 0) {
+            if (gp.getPlayerGold() < FIREFIGHTER_COST) {
+                return new FirefighterResponse("Tim pemadam batal berangkat. Gold tidak cukup.",
+                        FarmBurnHandledType.NONE);
+            }
+            gp.setPlayerGold(-FIREFIGHTER_COST);
+            state.modifyRisk(-3);
+            state.addReputation(2);
+            return new FirefighterResponse("Tim pemadam tiba, api lebih cepat terkendali. Gold -" + FIREFIGHTER_COST + ".",
+                    FarmBurnHandledType.FIREFIGHTER);
+        } else if (option == 1) {
+            state.modifyRisk(2);
+            state.addReputation(-1);
+            return new FirefighterResponse("Kamu memadamkan api sendiri. Risiko naik sedikit.",
+                    FarmBurnHandledType.NONE);
+        }
+        return new FirefighterResponse("Bantuan pemadam diabaikan. Api masih mengancam kebun.",
+                FarmBurnHandledType.NONE);
+    }
+
+    private int showFirefighterDialog(GamePanel gp) {
+        AtomicInteger result = new AtomicInteger(-1);
+        Window owner = SwingUtilities.getWindowAncestor(gp);
+        JDialog dialog = new JDialog(owner instanceof Frame ? (Frame) owner : null, "Pemadam Kebakaran", Dialog.ModalityType.APPLICATION_MODAL);
+        dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        dialog.setUndecorated(true);
+        dialog.setResizable(false);
+
+        JPanel outer = new JPanel(new BorderLayout());
+        outer.setBackground(new Color(10, 14, 20));
+        outer.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        JPanel card = new JPanel(new BorderLayout(0, 16));
+        card.setBackground(new Color(20, 28, 40));
+        card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(255, 255, 255, 28), 1),
+                BorderFactory.createEmptyBorder(20, 20, 20, 20)));
+
+        JPanel header = new JPanel(new BorderLayout(14, 0));
+        header.setOpaque(false);
+        JPanel icon = new JPanel();
+        icon.setOpaque(false);
+        icon.setPreferredSize(new java.awt.Dimension(52, 52));
+        icon.setBackground(new Color(0, 0, 0, 0));
+        icon.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(255, 255, 255, 28), 1),
+                BorderFactory.createEmptyBorder(6, 6, 6, 6)));
+
+        JLabel iconLabel = new JLabel("!");
+        iconLabel.setForeground(new Color(255, 196, 92));
+        iconLabel.setFont(new Font("SansSerif", Font.BOLD, 30));
+        icon.add(iconLabel);
+
+        JLabel title = new JLabel("Tim Pemadam Siaga");
+        title.setForeground(Color.WHITE);
+        title.setFont(new Font("SansSerif", Font.BOLD, 22));
+
+        JTextArea body = new JTextArea(
+                "Asap masih naik dari petak kebun.\n" +
+                "Pilih apakah kamu mau memanggil tim pemadam atau menangani api sendiri.");
+        body.setEditable(false);
+        body.setFocusable(false);
+        body.setOpaque(false);
+        body.setLineWrap(true);
+        body.setWrapStyleWord(true);
+        body.setForeground(new Color(232, 238, 245));
+        body.setFont(new Font("SansSerif", Font.PLAIN, 15));
+
+        JLabel note = new JLabel("Biaya bantuan: " + FIREFIGHTER_COST + " gold");
+        note.setForeground(new Color(255, 198, 109));
+        note.setFont(new Font("SansSerif", Font.BOLD, 13));
+
+        JPanel buttonRow = new JPanel(new GridBagLayout());
+        buttonRow.setOpaque(false);
+
+        JButton callButton = createButton("Panggil tim pemadam", new Color(48, 112, 220), new Color(64, 133, 255));
+        JButton handleButton = createButton("Tangani sendiri", new Color(80, 90, 102), new Color(98, 112, 128));
+
+        ActionListener callAction = e -> {
+            result.set(0);
+            dialog.dispose();
+        };
+        ActionListener handleAction = e -> {
+            result.set(1);
+            dialog.dispose();
+        };
+        callButton.addActionListener(callAction);
+        handleButton.addActionListener(handleAction);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(0, 0, 0, 12);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        buttonRow.add(callButton, gbc);
+        gbc.gridx = 1;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        buttonRow.add(handleButton, gbc);
+
+        JPanel headerText = new JPanel();
+        headerText.setOpaque(false);
+        headerText.setLayout(new javax.swing.BoxLayout(headerText, javax.swing.BoxLayout.Y_AXIS));
+        headerText.add(title);
+        headerText.add(javax.swing.Box.createVerticalStrut(8));
+        headerText.add(body);
+
+        header.add(icon, BorderLayout.WEST);
+        header.add(headerText, BorderLayout.CENTER);
+
+        JPanel footer = new JPanel(new BorderLayout(0, 8));
+        footer.setOpaque(false);
+        footer.add(note, BorderLayout.WEST);
+        footer.add(buttonRow, BorderLayout.EAST);
+
+        card.add(header, BorderLayout.NORTH);
+        card.add(footer, BorderLayout.SOUTH);
+
+        outer.add(card, BorderLayout.CENTER);
+        dialog.setContentPane(outer);
+        dialog.pack();
+        dialog.setSize(620, 300);
+        dialog.setLocationRelativeTo(gp);
+        dialog.setAlwaysOnTop(true);
+        dialog.setVisible(true);
+
+        return result.get();
+    }
+
+    private JButton createButton(String text, Color base, Color hover) {
+        JButton button = new JButton(text);
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 20));
+        button.setFont(new Font("SansSerif", Font.BOLD, 13));
+        button.setForeground(Color.WHITE);
+        button.setBackground(base);
+        button.setOpaque(true);
+        button.setContentAreaFilled(true);
+        button.setBorderPainted(false);
+        button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        button.setMinimumSize(new java.awt.Dimension(180, 42));
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                button.setBackground(hover);
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                button.setBackground(base);
+            }
+        });
+        return button;
+    }
+}

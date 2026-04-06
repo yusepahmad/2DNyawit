@@ -8,14 +8,38 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-
 import com.uph_lpjk.sawit2d.entity.Entity;
 import com.uph_lpjk.sawit2d.object.ObjGold;
 
 
 public class UserInterface {
-    
+
+    public enum BannerTone {
+        INFO,
+        SUCCESS,
+        WARNING,
+        DANGER,
+        WEATHER,
+        ECONOMY,
+        GAME_OVER
+    }
+
+    private static class Banner {
+        private final BannerTone tone;
+        private final String title;
+        private final String detail;
+        private int age;
+        private final int duration;
+
+        private Banner(BannerTone tone, String title, String detail, int duration) {
+            this.tone = tone;
+            this.title = title;
+            this.detail = detail;
+            this.duration = duration;
+            this.age = 0;
+        }
+    }
+
     final private GamePanel gp;
     
     protected BufferedImage gold;
@@ -23,17 +47,11 @@ public class UserInterface {
     private Graphics2D g2;
     private Font maruMonica, purisaBold;
     
-    private boolean messageOn = false;
-    private ArrayList<String> messages = new ArrayList<>();
-    private ArrayList<Integer> messageCounter = new ArrayList<>();
+    private Banner activeBanner;
 
-    private boolean gameFinished = false;
-    private String currentDialogue = "";
     private int commandNum = 0;
-    private int titleScreenState = 0;
     private int slotCol = 0;
     private int slotRow = 0;
-    private int subState = 0;
     
     public UserInterface(GamePanel gp) {
         this.gp = gp;
@@ -63,35 +81,45 @@ public class UserInterface {
     }
 
     public void addMessage(String text) {
-        this.messages.add(text);
-        this.messageCounter.add(0);
+        Banner banner = resolveBannerFromText(text);
+        if (banner == null) {
+            return;
+        }
+        pushBanner(banner.tone, banner.title, banner.detail);
     }
 
-    public void drawMessage() {
-        int messageX = this.gp.getTileSize();
-        int messageY = this.gp.getTileSize() * 4;
+    public void pushBanner(BannerTone tone, String title, String detail) {
+        this.activeBanner = new Banner(tone, title, detail, 240);
+    }
 
-        this.g2.setFont(this.g2.getFont().deriveFont(Font.BOLD, 32F));
+    public void resetNotifications() {
+        this.activeBanner = null;
+    }
 
-        for(int i = 0; i < this.messages.size(); i++) {
-            if(this.messages.get(i) != null) {
-                this.g2.setColor(Color.black);
-                this.g2.drawString(messages.get(i), messageX + 2, messageY + 2);
-
-                this.g2.setColor(Color.white);
-                this.g2.drawString(messages.get(i), messageX, messageY);
-
-                int counter = this.messageCounter.get(i) + 1;
-                this.messageCounter.set(i, counter);
-                messageY += 50;
-
-                if(this.messageCounter.get(i) > 180) {
-                    this.messages.remove(i);
-                    this.messageCounter.remove(i);
-                    i--; // Perbaiki indeks agar tidak melompati elemen berikutnya
-                }
-            }
+    private Banner resolveBannerFromText(String text) {
+        if (text == null || text.isEmpty()) {
+            return null;
         }
+        String lower = text.toLowerCase();
+        if (lower.contains("game over") || lower.contains("gold habis")) {
+            return new Banner(BannerTone.GAME_OVER, "Game Over", text, 240);
+        }
+        if (lower.contains("hujan")) {
+            return new Banner(BannerTone.WEATHER, "Hujan Turun", text, 240);
+        }
+        if (lower.contains("api") || lower.contains("kebakaran") || lower.contains("firebreak")) {
+            return new Banner(BannerTone.DANGER, "Kebakaran", text, 240);
+        }
+        if (lower.contains("jual") || lower.contains("stok")) {
+            return new Banner(BannerTone.ECONOMY, "Transaksi", text, 240);
+        }
+        if (lower.contains("panen") || lower.contains("tanam") || lower.contains("tumbuh")) {
+            return new Banner(BannerTone.SUCCESS, "Aktivitas Kebun", text, 240);
+        }
+        if (lower.contains("gold tidak cukup") || lower.contains("tidak bisa")) {
+            return new Banner(BannerTone.WARNING, "Peringatan", text, 240);
+        }
+        return new Banner(BannerTone.INFO, "Info", text, 240);
     }
 
     public void draw(Graphics2D g2) {
@@ -108,9 +136,12 @@ public class UserInterface {
             case TITLE: drawTitleScreen(); break;
             case PLAY: 
                 drawPlayerGold();
-                drawMessage();
+                drawFarmStatus();
+                drawBanner();
+                drawControlHint();
                 break;
             case PAUSE: drawPauseScreen(); break;
+            case GAME_OVER: drawGameOverScreen(); break;
         }
     }
 
@@ -196,6 +227,144 @@ public class UserInterface {
         int y = this.gp.getScreenHeight() / 2;
 
         g2.drawString(text, x, y);
+    }
+
+    private void drawGameOverScreen() {
+        this.g2.setColor(new Color(0, 0, 0, 220));
+        this.g2.fillRect(0, 0, this.gp.getScreenWidth(), this.gp.getScreenHeight());
+
+        this.g2.setFont(this.g2.getFont().deriveFont(Font.BOLD, 72F));
+        String title = "GAME OVER";
+        int x = getXforCenteredText(title);
+        int y = this.gp.getScreenHeight() / 2 - 20;
+        this.g2.setColor(Color.red);
+        this.g2.drawString(title, x, y);
+
+        this.g2.setFont(this.g2.getFont().deriveFont(Font.PLAIN, 24F));
+        String text = "Tekan Enter untuk kembali ke home.";
+        int textX = getXforCenteredText(text);
+        this.g2.setColor(Color.white);
+        this.g2.drawString(text, textX, y + 40);
+    }
+
+    private void drawBanner() {
+        if (this.activeBanner == null) {
+            return;
+        }
+
+        this.activeBanner.age++;
+        if (this.activeBanner.age > this.activeBanner.duration) {
+            this.activeBanner = null;
+            return;
+        }
+
+        int bannerW = this.gp.getTileSize() * 10;
+        int bannerH = this.gp.getTileSize() + 12;
+        int bannerX = (this.gp.getScreenWidth() - bannerW) / 2;
+        int bannerY = this.gp.getScreenHeight() - bannerH - (this.gp.getTileSize() / 2);
+
+        float alpha = 1.0f;
+        if (this.activeBanner.age < 24) {
+            alpha = this.activeBanner.age / 24.0f;
+        } else if (this.activeBanner.duration - this.activeBanner.age < 24) {
+            alpha = Math.max(0.0f, (this.activeBanner.duration - this.activeBanner.age) / 24.0f);
+        }
+
+        Color bg;
+        Color accent;
+        switch (this.activeBanner.tone) {
+            case WEATHER:
+                bg = new Color(28, 66, 110);
+                accent = new Color(96, 185, 255);
+                break;
+            case DANGER:
+                bg = new Color(95, 28, 28);
+                accent = new Color(255, 90, 90);
+                break;
+            case ECONOMY:
+                bg = new Color(42, 68, 34);
+                accent = new Color(138, 214, 91);
+                break;
+            case SUCCESS:
+                bg = new Color(32, 78, 52);
+                accent = new Color(88, 230, 144);
+                break;
+            case WARNING:
+                bg = new Color(92, 64, 22);
+                accent = new Color(255, 193, 71);
+                break;
+            case GAME_OVER:
+                bg = new Color(80, 18, 18);
+                accent = new Color(255, 115, 115);
+                break;
+            default:
+                bg = new Color(35, 40, 55);
+                accent = new Color(180, 180, 180);
+                break;
+        }
+
+        java.awt.Composite oldComposite = this.g2.getComposite();
+        this.g2.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, alpha));
+        this.g2.setColor(new Color(bg.getRed(), bg.getGreen(), bg.getBlue(), 215));
+        this.g2.fillRoundRect(bannerX, bannerY, bannerW, bannerH, 22, 22);
+
+        this.g2.setColor(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 220));
+        this.g2.fillRoundRect(bannerX, bannerY, 12, bannerH, 22, 22);
+
+        this.g2.setColor(new Color(255, 255, 255, 75));
+        this.g2.drawRoundRect(bannerX, bannerY, bannerW, bannerH, 22, 22);
+
+        this.g2.setFont(this.g2.getFont().deriveFont(Font.BOLD, 22F));
+        this.g2.setColor(Color.white);
+        this.g2.drawString(this.activeBanner.title, bannerX + 22, bannerY + 26);
+
+        this.g2.setFont(this.g2.getFont().deriveFont(Font.PLAIN, 16F));
+        this.g2.setColor(new Color(245, 245, 245));
+        this.g2.drawString(this.activeBanner.detail, bannerX + 22, bannerY + 47);
+
+        int barW = (int) ((bannerW - 24) * (1.0 - (double) this.activeBanner.age / this.activeBanner.duration));
+        this.g2.setColor(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 220));
+        this.g2.fillRect(bannerX + 12, bannerY + bannerH - 8, Math.max(0, barW), 4);
+
+        this.g2.setComposite(oldComposite);
+    }
+
+    private void drawFarmStatus() {
+        int boxX = this.gp.getTileSize() / 2;
+        int boxY = this.gp.getTileSize() / 2;
+        int boxW = this.gp.getTileSize() * 6;
+        int boxH = this.gp.getTileSize() * 6;
+
+        this.g2.setColor(new Color(0, 0, 0, 140));
+        this.g2.fillRoundRect(boxX, boxY, boxW, boxH, 16, 16);
+        this.g2.setColor(new Color(255, 255, 255, 180));
+        this.g2.drawRoundRect(boxX, boxY, boxW, boxH, 16, 16);
+
+        this.g2.setFont(this.g2.getFont().deriveFont(Font.BOLD, 17F));
+        this.g2.setColor(Color.white);
+
+        int textX = boxX + 14;
+        int textY = boxY + 24;
+        int lineHeight = 17;
+        this.g2.drawString("Hari: " + this.gp.getFarmState().getDay(), textX, textY);
+        this.g2.drawString("Jam: " + String.format("%02d:00", this.gp.getFarmState().getHour()), textX, textY + lineHeight);
+        this.g2.drawString("Inventory: " + this.gp.getFarmState().getInventory(), textX, textY + lineHeight * 2);
+        this.g2.drawString("Risk: " + this.gp.getFarmState().getRiskScore(), textX, textY + lineHeight * 3);
+        this.g2.drawString("Rep: " + this.gp.getFarmState().getReputation(), textX, textY + lineHeight * 4);
+        this.g2.drawString("Auto Tanam: " + (this.gp.getFarmSystem().isAutoPlantEnabled() ? "ON" : "OFF"), textX, textY + lineHeight * 5);
+        this.g2.drawString("Auto Panen: " + (this.gp.getFarmSystem().isAutoHarvestEnabled() ? "ON" : "OFF"), textX, textY + lineHeight * 6);
+    }
+
+    private void drawControlHint() {
+        this.g2.setFont(this.g2.getFont().deriveFont(Font.PLAIN, 14F));
+        String text = "Klik kiri/E: aksi kebun | Klik kanan/F: firebreak (-gold) | H: auto tanam | K: auto panen | J: auto jual | N: next day | Q: jual stok | P: pause";
+        int x = 16;
+        int y = this.gp.getScreenHeight() - 18;
+
+        this.g2.setColor(new Color(0, 0, 0, 140));
+        this.g2.drawString(text, x + 1, y + 1);
+        this.g2.setColor(Color.white);
+        this.g2.drawString(text, x, y);
     }
 
     public int getItemIndexOnSlot() {
