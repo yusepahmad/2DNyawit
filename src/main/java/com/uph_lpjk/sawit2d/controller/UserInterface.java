@@ -8,8 +8,12 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.uph_lpjk.sawit2d.entity.Entity;
 import com.uph_lpjk.sawit2d.object.ObjGold;
+import com.uph_lpjk.sawit2d.utility.AssetLoader;
 
 
 public class UserInterface {
@@ -28,21 +32,31 @@ public class UserInterface {
         private final BannerTone tone;
         private final String title;
         private final String detail;
+        private final BufferedImage icon;
         private int age;
         private final int duration;
 
-        private Banner(BannerTone tone, String title, String detail, int duration) {
+        private Banner(BannerTone tone, String title, String detail, int duration, BufferedImage icon) {
             this.tone = tone;
             this.title = title;
             this.detail = detail;
+            this.icon = icon;
             this.duration = duration;
             this.age = 0;
         }
     }
 
     final private GamePanel gp;
+    private final AssetLoader assetLoader = new AssetLoader();
     
     protected BufferedImage gold;
+    private final BufferedImage infoIcon;
+    private final BufferedImage successIcon;
+    private final BufferedImage warningIcon;
+    private final BufferedImage dangerIcon;
+    private final BufferedImage weatherIcon;
+    private final BufferedImage economyIcon;
+    private final BufferedImage gameOverIcon;
     
     private Graphics2D g2;
     private Font maruMonica, purisaBold;
@@ -70,6 +84,14 @@ public class UserInterface {
         // CREATE HUD OBJECT
         Entity objGold = new ObjGold(gp);
         this.gold = objGold.getImage();
+
+        this.infoIcon = assetLoader.loadImage(28, 28, "assets/weather-sunny.png", "../assets/weather-sunny.png", "/tile/grass00.png");
+        this.successIcon = assetLoader.loadImage(28, 28, "assets/tanah 2.png", "../assets/tanah 2.png", "/tile/grass01.png");
+        this.warningIcon = assetLoader.loadImage(28, 28, "assets/banjir.png", "../assets/banjir.png", "/tile/water00.png");
+        this.dangerIcon = assetLoader.loadImage(28, 28, "assets/kebakaran.png", "../assets/kebakaran.png", "/tile/wall.png");
+        this.weatherIcon = assetLoader.loadImage(28, 28, "assets/weather-cloudy.png", "../assets/weather-cloudy.png", "/tile/water01.png");
+        this.economyIcon = assetLoader.loadImage(28, 28, "assets/goldie.png", "../assets/goldie.png", "/objects/gold/goldie.png");
+        this.gameOverIcon = assetLoader.loadImage(28, 28, "assets/after kebakaran (2).png", "../assets/after kebakaran (2).png", "assets/after kebakarann.png");
     }
 
     public int getCommandNum() {
@@ -89,7 +111,7 @@ public class UserInterface {
     }
 
     public void pushBanner(BannerTone tone, String title, String detail) {
-        this.activeBanner = new Banner(tone, title, detail, 240);
+        this.activeBanner = createBanner(tone, title, detail);
     }
 
     public void resetNotifications() {
@@ -102,24 +124,47 @@ public class UserInterface {
         }
         String lower = text.toLowerCase();
         if (lower.contains("game over") || lower.contains("gold habis")) {
-            return new Banner(BannerTone.GAME_OVER, "Game Over", text, 240);
+            return createBanner(BannerTone.GAME_OVER, "Game Over", text);
         }
         if (lower.contains("hujan")) {
-            return new Banner(BannerTone.WEATHER, "Hujan Turun", text, 240);
+            return createBanner(BannerTone.WEATHER, "Hujan Turun", text);
         }
         if (lower.contains("api") || lower.contains("kebakaran") || lower.contains("firebreak")) {
-            return new Banner(BannerTone.DANGER, "Kebakaran", text, 240);
+            return createBanner(BannerTone.DANGER, "Kebakaran", text);
         }
         if (lower.contains("jual") || lower.contains("stok")) {
-            return new Banner(BannerTone.ECONOMY, "Transaksi", text, 240);
+            return createBanner(BannerTone.ECONOMY, "Transaksi", text);
         }
         if (lower.contains("panen") || lower.contains("tanam") || lower.contains("tumbuh")) {
-            return new Banner(BannerTone.SUCCESS, "Aktivitas Kebun", text, 240);
+            return createBanner(BannerTone.SUCCESS, "Aktivitas Kebun", text);
         }
         if (lower.contains("gold tidak cukup") || lower.contains("tidak bisa")) {
-            return new Banner(BannerTone.WARNING, "Peringatan", text, 240);
+            return createBanner(BannerTone.WARNING, "Peringatan", text);
         }
-        return new Banner(BannerTone.INFO, "Info", text, 240);
+        return createBanner(BannerTone.INFO, "Info", text);
+    }
+
+    private Banner createBanner(BannerTone tone, String title, String detail) {
+        return new Banner(tone, title, detail, 240, resolveBannerIcon(tone));
+    }
+
+    private BufferedImage resolveBannerIcon(BannerTone tone) {
+        switch (tone) {
+            case WEATHER:
+                return this.weatherIcon;
+            case DANGER:
+                return this.dangerIcon;
+            case ECONOMY:
+                return this.economyIcon;
+            case SUCCESS:
+                return this.successIcon;
+            case WARNING:
+                return this.warningIcon;
+            case GAME_OVER:
+                return this.gameOverIcon;
+            default:
+                return this.infoIcon;
+        }
     }
 
     public void draw(Graphics2D g2) {
@@ -240,11 +285,21 @@ public class UserInterface {
         this.g2.setColor(Color.red);
         this.g2.drawString(title, x, y);
 
+        this.g2.setFont(this.g2.getFont().deriveFont(Font.BOLD, 26F));
+        String subtitle = "Tanah Anda Disita Negara";
+        int subtitleX = getXforCenteredText(subtitle);
+        this.g2.setColor(new Color(255, 210, 120));
+        this.g2.drawString(subtitle, subtitleX, y + 42);
+
+        this.g2.setFont(this.g2.getFont().deriveFont(Font.PLAIN, 22F));
+        String reason = this.gp.getFarmState().getLastNotification();
+        this.g2.setColor(Color.white);
+        drawWrappedText(reason, this.gp.getScreenWidth() / 2, y + 86, this.gp.getScreenWidth() - 220, 28, true);
+
         this.g2.setFont(this.g2.getFont().deriveFont(Font.PLAIN, 24F));
         String text = "Tekan Enter untuk kembali ke home.";
         int textX = getXforCenteredText(text);
-        this.g2.setColor(Color.white);
-        this.g2.drawString(text, textX, y + 40);
+        this.g2.drawString(text, textX, this.gp.getScreenHeight() - 80);
     }
 
     private void drawBanner() {
@@ -259,7 +314,9 @@ public class UserInterface {
         }
 
         int bannerW = this.gp.getTileSize() * 10;
-        int bannerH = this.gp.getTileSize() + 12;
+        int detailMaxWidth = bannerW - 92;
+        List<String> detailLines = wrapText(this.activeBanner.detail, detailMaxWidth);
+        int bannerH = Math.max(this.gp.getTileSize() + 16, 62 + (detailLines.size() * 18));
         int bannerX = (this.gp.getScreenWidth() - bannerW) / 2;
         int bannerY = this.gp.getScreenHeight() - bannerH - (this.gp.getTileSize() / 2);
 
@@ -314,13 +371,25 @@ public class UserInterface {
         this.g2.setColor(new Color(255, 255, 255, 75));
         this.g2.drawRoundRect(bannerX, bannerY, bannerW, bannerH, 22, 22);
 
-        this.g2.setFont(this.g2.getFont().deriveFont(Font.BOLD, 22F));
-        this.g2.setColor(Color.white);
-        this.g2.drawString(this.activeBanner.title, bannerX + 22, bannerY + 26);
+        int iconX = bannerX + 24;
+        int iconY = bannerY + 14;
+        this.g2.setColor(new Color(255, 255, 255, 34));
+        this.g2.fillRoundRect(iconX - 6, iconY - 4, 36, 36, 12, 12);
+        if (this.activeBanner.icon != null) {
+            this.g2.drawImage(this.activeBanner.icon, iconX, iconY, 24, 24, null);
+        }
 
-        this.g2.setFont(this.g2.getFont().deriveFont(Font.PLAIN, 16F));
+        this.g2.setFont(this.g2.getFont().deriveFont(Font.BOLD, 21F));
+        this.g2.setColor(Color.white);
+        this.g2.drawString(this.activeBanner.title, bannerX + 64, bannerY + 28);
+
+        this.g2.setFont(this.g2.getFont().deriveFont(Font.PLAIN, 15F));
         this.g2.setColor(new Color(245, 245, 245));
-        this.g2.drawString(this.activeBanner.detail, bannerX + 22, bannerY + 47);
+        int detailY = bannerY + 49;
+        for (String line : detailLines) {
+            this.g2.drawString(line, bannerX + 64, detailY);
+            detailY += 18;
+        }
 
         int barW = (int) ((bannerW - 24) * (1.0 - (double) this.activeBanner.age / this.activeBanner.duration));
         this.g2.setColor(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 220));
@@ -382,5 +451,58 @@ public class UserInterface {
         int length = (int)this.g2.getFontMetrics().getStringBounds(text, this.g2).getWidth();
         int x = tailX - length;
         return x;
+    }
+
+    private List<String> wrapText(String text, int maxWidth) {
+        ArrayList<String> lines = new ArrayList<>();
+        if (text == null || text.isBlank()) {
+            lines.add("");
+            return lines;
+        }
+
+        String[] paragraphs = text.split("\\n");
+        for (String paragraph : paragraphs) {
+            String normalized = paragraph.trim();
+            if (normalized.isEmpty()) {
+                lines.add("");
+                continue;
+            }
+
+            String[] words = normalized.split("\\s+");
+            StringBuilder line = new StringBuilder();
+            for (String word : words) {
+                String testLine = line.length() == 0 ? word : line + " " + word;
+                int width = this.g2.getFontMetrics().stringWidth(testLine);
+                if (width > maxWidth && line.length() > 0) {
+                    lines.add(line.toString());
+                    line = new StringBuilder(word);
+                } else {
+                    if (line.length() > 0) {
+                        line.append(" ");
+                    }
+                    line.append(word);
+                }
+            }
+            if (line.length() > 0) {
+                lines.add(line.toString());
+            }
+        }
+
+        if (lines.isEmpty()) {
+            lines.add("");
+        }
+        return lines;
+    }
+
+    private void drawWrappedText(String text, int centerX, int startY, int maxWidth, int lineHeight, boolean centered) {
+        List<String> lines = wrapText(text, maxWidth);
+        int y = startY;
+        for (String line : lines) {
+            int drawX = centered
+                    ? centerX - (int) this.g2.getFontMetrics().getStringBounds(line, this.g2).getWidth() / 2
+                    : centerX;
+            this.g2.drawString(line, drawX, y);
+            y += lineHeight;
+        }
     }
 }

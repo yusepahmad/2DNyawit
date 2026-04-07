@@ -1,9 +1,5 @@
 package com.uph_lpjk.sawit2d.controller;
 
-import com.uph_lpjk.sawit2d.interactive.tile.DryTree;
-import com.uph_lpjk.sawit2d.object.ObjAxe;
-import com.uph_lpjk.sawit2d.object.ObjGold;
-
 public class AssetSetter {
     
     final private GamePanel gp;

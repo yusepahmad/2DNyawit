@@ -1,6 +1,7 @@
 package com.uph_lpjk.sawit2d.farm;
 
 import com.uph_lpjk.sawit2d.controller.GamePanel;
+import com.uph_lpjk.sawit2d.utility.AssetLoader;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -19,24 +20,27 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Window;
+import java.awt.image.BufferedImage;
 import java.awt.event.ActionListener;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class FirefighterEventSystem {
     private static final int FIREFIGHTER_COST = 30;
+    private final AssetLoader assetLoader = new AssetLoader();
+    private final BufferedImage fireIcon = assetLoader.loadImage(40, 40, "assets/elephant-front.png", "../assets/elephant-front.png", "assets/elephant-back.png", "/tile/hut.png");
 
     public FirefighterResponse promptHelp(GamePanel gp, GameState state) {
         int option = showFirefighterDialog(gp);
 
         if (option == 0) {
             if (gp.getPlayerGold() < FIREFIGHTER_COST) {
-                return new FirefighterResponse("Tim pemadam batal berangkat. Gold tidak cukup.",
+                return new FirefighterResponse("Tim gajah pemadam batal berangkat. Gold tidak cukup.",
                         FarmBurnHandledType.NONE);
             }
             gp.setPlayerGold(-FIREFIGHTER_COST);
             state.modifyRisk(-3);
             state.addReputation(2);
-            return new FirefighterResponse("Tim pemadam tiba, api lebih cepat terkendali. Gold -" + FIREFIGHTER_COST + ".",
+            return new FirefighterResponse("Tim gajah pemadam tiba, api lebih cepat terkendali. Gold -" + FIREFIGHTER_COST + ".",
                     FarmBurnHandledType.FIREFIGHTER);
         } else if (option == 1) {
             state.modifyRisk(2);
@@ -51,7 +55,7 @@ public class FirefighterEventSystem {
     private int showFirefighterDialog(GamePanel gp) {
         AtomicInteger result = new AtomicInteger(-1);
         Window owner = SwingUtilities.getWindowAncestor(gp);
-        JDialog dialog = new JDialog(owner instanceof Frame ? (Frame) owner : null, "Pemadam Kebakaran", Dialog.ModalityType.APPLICATION_MODAL);
+        JDialog dialog = new JDialog(owner instanceof Frame ? (Frame) owner : null, "Tim Gajah Pemadam", Dialog.ModalityType.APPLICATION_MODAL);
         dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         dialog.setUndecorated(true);
         dialog.setResizable(false);
@@ -68,7 +72,7 @@ public class FirefighterEventSystem {
 
         JPanel header = new JPanel(new BorderLayout(14, 0));
         header.setOpaque(false);
-        JPanel icon = new JPanel();
+        JPanel icon = new JPanel(new BorderLayout());
         icon.setOpaque(false);
         icon.setPreferredSize(new java.awt.Dimension(52, 52));
         icon.setBackground(new Color(0, 0, 0, 0));
@@ -76,18 +80,17 @@ public class FirefighterEventSystem {
                 BorderFactory.createLineBorder(new Color(255, 255, 255, 28), 1),
                 BorderFactory.createEmptyBorder(6, 6, 6, 6)));
 
-        JLabel iconLabel = new JLabel("!");
-        iconLabel.setForeground(new Color(255, 196, 92));
-        iconLabel.setFont(new Font("SansSerif", Font.BOLD, 30));
-        icon.add(iconLabel);
+        JLabel iconLabel = new JLabel(new javax.swing.ImageIcon(fireIcon));
+        iconLabel.setHorizontalAlignment(JLabel.CENTER);
+        icon.add(iconLabel, BorderLayout.CENTER);
 
-        JLabel title = new JLabel("Tim Pemadam Siaga");
+        JLabel title = new JLabel("Tim Gajah Pemadam Siaga");
         title.setForeground(Color.WHITE);
         title.setFont(new Font("SansSerif", Font.BOLD, 22));
 
         JTextArea body = new JTextArea(
                 "Asap masih naik dari petak kebun.\n" +
-                "Pilih apakah kamu mau memanggil tim pemadam atau menangani api sendiri.");
+                "Pilih apakah kamu mau memanggil tim gajah pemadam atau menangani api sendiri.");
         body.setEditable(false);
         body.setFocusable(false);
         body.setOpaque(false);
@@ -103,7 +106,7 @@ public class FirefighterEventSystem {
         JPanel buttonRow = new JPanel(new GridBagLayout());
         buttonRow.setOpaque(false);
 
-        JButton callButton = createButton("Panggil tim pemadam", new Color(48, 112, 220), new Color(64, 133, 255));
+        JButton callButton = createButton("Panggil tim gajah", new Color(48, 112, 220), new Color(64, 133, 255));
         JButton handleButton = createButton("Tangani sendiri", new Color(80, 90, 102), new Color(98, 112, 128));
 
         ActionListener callAction = e -> {

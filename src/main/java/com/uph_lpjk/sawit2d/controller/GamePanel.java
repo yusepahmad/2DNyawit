@@ -413,7 +413,9 @@ public class GamePanel extends JPanel implements Runnable {
                 this.farmSystem.toggleAutoHarvestMode();
             }
             if (this.keyH.consumeActionPressed()) {
-                this.farmSystem.interact(this.player);
+                if (!interactWorldObject(this.player)) {
+                    this.farmSystem.interact(this.player);
+                }
             }
             if (this.keyH.consumeFirebreakPressed()) {
                 this.farmSystem.toggleFirebreakAtPlayer();
@@ -443,6 +445,18 @@ public class GamePanel extends JPanel implements Runnable {
         if(this.gameState == GamePanel.State.GAME_OVER) {
             // NOTHING
         }
+    }
+
+    public boolean interactWorldObject(Entity entity) {
+        int objectIndex = this.cChecker.checkObject(entity, true);
+        if (objectIndex == 999 || this.obj[objectIndex] == null) {
+            return false;
+        }
+        if (this.obj[objectIndex].getType() == entity.type_npc) {
+            this.obj[objectIndex].use(entity);
+            return true;
+        }
+        return false;
     }
 
     public void drawToTempScreen() {

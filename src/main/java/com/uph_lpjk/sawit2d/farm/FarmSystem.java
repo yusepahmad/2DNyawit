@@ -10,6 +10,7 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.util.List;
+import java.util.Random;
 
 public class FarmSystem {
     private static final double RAIN_PRICE_MULTIPLIER = 0.7;
@@ -42,6 +43,7 @@ public class FarmSystem {
     private final BufferedImage rainImage;
     private final BufferedImage firebreakImage;
     private final BufferedImage laneImage;
+    private final Random eventRandom = new Random();
 
     private boolean autoPlantEnabled = false;
     private boolean autoSellEnabled = false;
@@ -161,14 +163,16 @@ public class FarmSystem {
     }
 
     public void nextDay() {
-        resolveDailyTransition(true);
-        gameState.resetMorningHour();
+        if (!resolveDailyTransition(true)) {
+            gameState.resetMorningHour();
+        }
     }
 
     public void advanceClock() {
         if (gameState.advanceHour()) {
-            resolveDailyTransition(true);
-            gameState.resetMorningHour();
+            if (!resolveDailyTransition(true)) {
+                gameState.resetMorningHour();
+            }
         }
     }
 
@@ -216,11 +220,15 @@ public class FarmSystem {
         return performHarvestAssist(false);
     }
 
-    private void resolveDailyTransition(boolean incrementDay) {
+    private boolean resolveDailyTransition(boolean incrementDay) {
         if (incrementDay) {
             gameState.incrementDay();
         }
         farmGrid.advanceDay();
+        advanceUnusedLandDays();
+        if (checkLandSeizure()) {
+            return true;
+        }
 
         int spread = farmGrid.spreadUncontrolledFire();
         if (spread > 0) {
@@ -256,6 +264,7 @@ public class FarmSystem {
                 summary.append(" ").append(firefighterResult.getMessage());
                 if (firefighterResult.getHandledType() != FarmBurnHandledType.NONE) {
                     farmGrid.markAllBurnedHandled(firefighterResult.getHandledType());
+                    summary.append(" ").append(buildFireAftermathMessage(firefighterResult.getHandledType()));
                 }
             } else {
                 summary.append(" Malam lewat dengan aman.");
@@ -265,6 +274,7 @@ public class FarmSystem {
 
         gameState.setLastNotification(summary.toString());
         gp.addUIMessage(summary.toString());
+        return false;
     }
 
     public String performHarvestAssist(boolean auto) {
@@ -482,7 +492,7 @@ public class FarmSystem {
             gp.setPlayerGold(-MANUAL_FIRE_HANDLE_COST);
             tile.extinguish();
             gp.playSoundEffect(3);
-            gp.addUIMessage("Asap di petak " + formatPlot(tilePos) + " berhasil dipadamkan. Gold -" + MANUAL_FIRE_HANDLE_COST + ".");
+            gp.addUIMessage("Asap di petak " + formatPlot(tilePos) + " berhasil dipadamkan. Gold -" + MANUAL_FIRE_HANDLE_COST + ". " + buildFireAftermathMessage(FarmBurnHandledType.MANUAL));
             return;
         }
 
@@ -543,11 +553,14 @@ public class FarmSystem {
     }
 
     private boolean isLaneCell(int localCol, int localRow) {
-        return false;
+        return localCol == 0
+                || localRow == 0
+                || localCol == farmCols - 1
+                || localRow == farmRows - 1;
     }
 
     private boolean isPlantablePlot(int localCol, int localRow) {
-        return true;
+        return !isLaneCell(localCol, localRow);
     }
 
     private boolean canAutoPlantSafely(int row, int col, FarmTile tile) {
@@ -562,6 +575,9 @@ public class FarmSystem {
     }
 
     private Color getTileOverlayColor(FarmTile tile, int localCol, int localRow) {
+        if (isLaneCell(localCol, localRow)) {
+            return new Color(125, 94, 55, 100);
+        }
         if (tile.isBurned()) {
             return tile.isBurnedHandled() ? new Color(90, 180, 220, 200) : new Color(160, 40, 40, 210);
         }
@@ -585,5 +601,55 @@ public class FarmSystem {
 
     private String formatPlot(Point plot) {
         return "(" + (plot.x + farmOriginCol) + "," + (plot.y + farmOriginRow) + ")";
+    }
+
+    private void advanceUnusedLandDays() {
+        for (int row = 0; row < farmGrid.getRows(); row++) {
+            for (int col = 0; col < farmGrid.getCols(); col++) {
+                if (!isPlantablePlot(col, row)) {
+                    continue;
+                }
+                FarmTile tile = farmGrid.getTile(row, col);
+                if (tile == null) {
+                    continue;
+                }
+                if (tile.getType() == FarmTileType.EMPTY && !tile.isBurned()) {
+                    tile.advanceUnusedDay();
+                } else {
+                    tile.resetUnusedDays();
+                }
+            }
+        }
+    }
+
+    private boolean checkLandSeizure() {
+        for (int row = 0; row < farmGrid.getRows(); row++) {
+            for (int col = 0; col < farmGrid.getCols(); col++) {
+                if (!isPlantablePlot(col, row)) {
+                    continue;
+                }
+                FarmTile tile = farmGrid.getTile(row, col);
+                if (tile != null && tile.isLandExpired()) {
+                    String reason = "Tanah Anda disita negara karena dibiarkan kosong selama 2 minggu. Game over.";
+                    gp.setGameOver(reason);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private String buildFireAftermathMessage(FarmBurnHandledType handledType) {
+        if (handledType == FarmBurnHandledType.FIREFIGHTER) {
+            return eventRandom.nextBoolean()
+                    ? "Verrell Bramasta datang meninjau kebakaran dan membantu menenangkan warga."
+                    : "Zulhas datang membawa bantuan beras untuk warga sekitar.";
+        }
+        if (handledType == FarmBurnHandledType.MANUAL) {
+            return eventRandom.nextBoolean()
+                    ? "Verrell Bramasta datang meninjau kebakaran dan ikut memastikan area aman."
+                    : "Zulhas datang membawa bantuan beras untuk warga yang terdampak.";
+        }
+        return "";
     }
 }

@@ -1,11 +1,13 @@
 package com.uph_lpjk.sawit2d.farm;
 
 public class FarmTile {
+    private static final int UNUSUED_LAND_LIMIT_DAYS = 14;
     private FarmTileType type;
     private int remainingGrowDays;
     private boolean readyToHarvest;
     private boolean burned;
     private FarmBurnHandledType handledType;
+    private int unusedDays;
 
     public FarmTile() {
         this.type = FarmTileType.EMPTY;
@@ -13,6 +15,7 @@ public class FarmTile {
         this.readyToHarvest = false;
         this.burned = false;
         this.handledType = FarmBurnHandledType.NONE;
+        this.unusedDays = 0;
     }
 
     public FarmTileType getType() {
@@ -43,6 +46,7 @@ public class FarmTile {
             this.readyToHarvest = false;
             this.burned = false;
             this.handledType = FarmBurnHandledType.NONE;
+            this.unusedDays = 0;
         }
     }
 
@@ -102,6 +106,9 @@ public class FarmTile {
         this.type = type;
         this.readyToHarvest = false;
         this.remainingGrowDays = type.getGrowTime();
+        if (type != FarmTileType.EMPTY) {
+            this.unusedDays = 0;
+        }
     }
 
     public FarmBurnHandledType getBurnHandledType() {
@@ -113,10 +120,29 @@ public class FarmTile {
         this.remainingGrowDays = 0;
         this.readyToHarvest = false;
         this.handledType = FarmBurnHandledType.NONE;
+        this.unusedDays = 0;
     }
 
     public void resetBurnOnly() {
         this.burned = false;
         this.handledType = FarmBurnHandledType.NONE;
+    }
+
+    public void advanceUnusedDay() {
+        if (this.type == FarmTileType.EMPTY && !this.burned) {
+            this.unusedDays++;
+        }
+    }
+
+    public boolean isLandExpired() {
+        return this.type == FarmTileType.EMPTY && this.unusedDays >= UNUSUED_LAND_LIMIT_DAYS;
+    }
+
+    public int getUnusedDays() {
+        return this.unusedDays;
+    }
+
+    public void resetUnusedDays() {
+        this.unusedDays = 0;
     }
 }
