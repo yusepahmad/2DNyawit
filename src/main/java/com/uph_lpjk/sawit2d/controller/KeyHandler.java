@@ -6,6 +6,8 @@ import java.awt.event.KeyListener;
 public class KeyHandler implements KeyListener {
     final private GamePanel gp;
     private boolean upPressed, downPressed, leftPressed, rightPressed, enterPressed;
+    private boolean actionPressed, nextDayPressed, sellPressed, firebreakPressed;
+    private boolean autoPlantPressed, autoSellPressed, autoHarvestPressed;
     private boolean showDebugText = false;
 
     public KeyHandler(GamePanel gp) {
@@ -32,6 +34,48 @@ public class KeyHandler implements KeyListener {
         return this.enterPressed;
     }
 
+    public boolean consumeActionPressed() {
+        boolean pressed = this.actionPressed;
+        this.actionPressed = false;
+        return pressed;
+    }
+
+    public boolean consumeNextDayPressed() {
+        boolean pressed = this.nextDayPressed;
+        this.nextDayPressed = false;
+        return pressed;
+    }
+
+    public boolean consumeSellPressed() {
+        boolean pressed = this.sellPressed;
+        this.sellPressed = false;
+        return pressed;
+    }
+
+    public boolean consumeFirebreakPressed() {
+        boolean pressed = this.firebreakPressed;
+        this.firebreakPressed = false;
+        return pressed;
+    }
+
+    public boolean consumeAutoPlantPressed() {
+        boolean pressed = this.autoPlantPressed;
+        this.autoPlantPressed = false;
+        return pressed;
+    }
+
+    public boolean consumeAutoSellPressed() {
+        boolean pressed = this.autoSellPressed;
+        this.autoSellPressed = false;
+        return pressed;
+    }
+
+    public boolean consumeAutoHarvestPressed() {
+        boolean pressed = this.autoHarvestPressed;
+        this.autoHarvestPressed = false;
+        return pressed;
+    }
+
     public boolean getShowDebugText() {
         return this.showDebugText;
     }
@@ -44,6 +88,7 @@ public class KeyHandler implements KeyListener {
             case TITLE: titleState(code); break;
             case PLAY: playState(code); break;
             case PAUSE: pauseState(code); break;
+            case GAME_OVER: gameOverState(code); break;
         }
     }
 
@@ -62,6 +107,9 @@ public class KeyHandler implements KeyListener {
         }
         if(code == KeyEvent.VK_D) {
             this.rightPressed = false;
+        }
+        if(code == KeyEvent.VK_ENTER) {
+            this.enterPressed = false;
         }
     }
 
@@ -108,6 +156,28 @@ public class KeyHandler implements KeyListener {
         if(code == KeyEvent.VK_D) {
             this.rightPressed = true;
         }
+        if(code == KeyEvent.VK_ENTER || code == KeyEvent.VK_E) {
+            this.enterPressed = true;
+            this.actionPressed = true;
+        }
+        if(code == KeyEvent.VK_N) {
+            this.nextDayPressed = true;
+        }
+        if(code == KeyEvent.VK_Q) {
+            this.sellPressed = true;
+        }
+        if(code == KeyEvent.VK_F) {
+            this.firebreakPressed = true;
+        }
+        if(code == KeyEvent.VK_H) {
+            this.autoPlantPressed = true;
+        }
+        if(code == KeyEvent.VK_J) {
+            this.autoSellPressed = true;
+        }
+        if(code == KeyEvent.VK_K) {
+            this.autoHarvestPressed = true;
+        }
         if(code == KeyEvent.VK_R) {
             this.gp.loadMap();
         }
@@ -126,6 +196,12 @@ public class KeyHandler implements KeyListener {
     private void pauseState(int code) {
         if(code == KeyEvent.VK_P) {
             this.gp.setGameState(GamePanel.State.PLAY);
+        }
+    }
+
+    private void gameOverState(int code) {
+        if (code == KeyEvent.VK_ENTER) {
+            this.gp.returnHomeFromGameOver();
         }
     }
 

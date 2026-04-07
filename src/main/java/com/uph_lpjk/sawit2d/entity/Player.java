@@ -60,9 +60,13 @@ public class Player extends Entity {
     }
 
     private void setDefaultValues() {
-        setWorldX(this.tileSize * 46);
-        setWorldY(this.tileSize * 18);
+        setWorldX(this.tileSize * 20);
+        setWorldY(this.tileSize * 15);
         setSpeed(3);
+    }
+
+    public void resetToDefaultValues() {
+        setDefaultValues();
     }
 
     private void getPlayerImage() {
