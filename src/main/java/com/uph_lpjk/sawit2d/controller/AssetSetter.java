@@ -1,8 +1,8 @@
 package com.uph_lpjk.sawit2d.controller;
 
+import java.util.Random;
+
 import com.uph_lpjk.sawit2d.interactive.tile.DryTree;
-import com.uph_lpjk.sawit2d.object.ObjAxe;
-import com.uph_lpjk.sawit2d.object.ObjGold;
 
 public class AssetSetter {
     
@@ -14,49 +14,47 @@ public class AssetSetter {
 
     public void setObject() {
         int i = 0;
-        this.gp.setObject(i, 
-            new ObjAxe(this.gp), 
-            this.gp.getTileSize()*41, 
-            this.gp.getTileSize()*21);
-        i++;
-        this.gp.setObject(i, 
-            new ObjGold(this.gp), 
-            this.gp.getTileSize()*41, 
-            this.gp.getTileSize()*15);
-        i++;
+        
+        // HOME (Position: Col 2, Row 2)
+        this.gp.setObject(i, new com.uph_lpjk.sawit2d.object.ObjHomeTopLeft(this.gp), this.gp.getTileSize()*41, this.gp.getTileSize()*2); i++;
+        this.gp.setObject(i, new com.uph_lpjk.sawit2d.object.ObjHomeTopRight(this.gp), this.gp.getTileSize()*42, this.gp.getTileSize()*2); i++;
+        this.gp.setObject(i, new com.uph_lpjk.sawit2d.object.ObjHomeBottomLeft(this.gp), this.gp.getTileSize()*41, this.gp.getTileSize()*3); i++;
+        this.gp.setObject(i, new com.uph_lpjk.sawit2d.object.ObjHomeBottomRight(this.gp), this.gp.getTileSize()*42, this.gp.getTileSize()*3); i++;
+
+        // GARAGE (Position: Col 40, Row 2)
+        this.gp.setObject(i, new com.uph_lpjk.sawit2d.object.ObjGarageTopLeft(this.gp), this.gp.getTileSize()*43, this.gp.getTileSize()*2); i++;
+        this.gp.setObject(i, new com.uph_lpjk.sawit2d.object.ObjGarageTopRight(this.gp), this.gp.getTileSize()*44, this.gp.getTileSize()*2); i++;
+        this.gp.setObject(i, new com.uph_lpjk.sawit2d.object.ObjGarageBottomLeft(this.gp), this.gp.getTileSize()*43, this.gp.getTileSize()*3); i++;
+        this.gp.setObject(i, new com.uph_lpjk.sawit2d.object.ObjGarageBottomRight(this.gp), this.gp.getTileSize()*44, this.gp.getTileSize()*3); i++;
     }
 
     public void setInteractiveTile() {
         int i = 0;
-        java.util.Random random = new java.util.Random();
+        Random random = new java.util.Random();
         
-        int playerStartX = 46;
-        int playerStartY = 18;
-        int clearRadius = 7;
+        // Define Safe Zone (Building areas in Branch B)
+        int houseX = 2, houseY = 2;
+        int garageX = 45, garageY = 2;
+        int farmAreaStart = 7, farmAreaEnd = 42;
 
         for(int row = 0; row < gp.getMaxWorldRow(); row++) {
             for(int col = 0; col < gp.getMaxWorldCol(); col++) {
                 
-                // 1. ZONA AMAN (RUMAH)
-                double distToPlayer = Math.sqrt(Math.pow(col - playerStartX, 2) + Math.pow(row - playerStartY, 2));
-                if(distToPlayer < clearRadius) continue;
+                // 1. AVOID BUILDINGS & FARM GRID
+                if(Math.abs(col - houseX) < 5 && Math.abs(row - houseY) < 5) continue;
+                if(Math.abs(col - garageX) < 5 && Math.abs(row - garageY) < 5) continue;
+                if(col >= farmAreaStart && col <= farmAreaEnd && row >= farmAreaStart && row <= farmAreaEnd) continue;
 
-                // 2. CEK TILE VALID (Hanya di Rumput/Tanah/Tile 45)
+                // 2. ONLY ON VALID TILES (Grass/Earth)
                 int tileNum = gp.getMapTileNum(col, row);
-                if(tileNum == 10 || tileNum == 11 || tileNum == 39 || tileNum == 45) {
+                if(tileNum == 10 || tileNum == 11 || tileNum == 39) {
                     
-                    // 3. LOGIKA KLASTER (Noise sederhana menggunakan Sin/Cos)
-                    // Mengatur angka di dalam sin/cos mengubah "ukuran" kelompok pohon
+                    // 3. CLUSTER LOGIC (Sin/Cos Noise)
                     double clusterNoise = Math.sin(col * 0.4) * Math.cos(row * 0.4);
                     
-                    // clusterNoise > -0.2 artinya pohon akan tumbuh di sekitar 60% daratan
-                    // Ini menciptakan pulau-pulau hutan dan area rumput terbuka yang luas
-                    if(clusterNoise > -0.2) {
-                        
-                        // 4. KERAPATAN BERHIMPITAN (Probabilitas di dalam klaster)
-                        // 90% pohon akan tumbuh di dalam area klaster agar terlihat berhimpitan
-                        if(random.nextInt(100) < 90) {
-                            if(i < 900) { // Batas array iTile baru
+                    if(clusterNoise > -0.1) {
+                        if(random.nextInt(100) < 85) {
+                            if(i < 900) {
                                 this.gp.setInteractiveTile(i, new DryTree(gp, col, row));
                                 i++;
                             }
