@@ -56,6 +56,7 @@ public class GamePanel extends JPanel implements Runnable {
     final private KeyHandler keyH = new KeyHandler(this);
     final private AssetSetter aSetter = new AssetSetter(this);
     final private UserInterface ui = new UserInterface(this);
+    final private EventHandler eHandler = new EventHandler(this);
     final private Sound music = new Sound();
     final private Sound soundEffect = new Sound();
     final private FarmSystem farmSystem = new FarmSystem(this);
@@ -66,6 +67,7 @@ public class GamePanel extends JPanel implements Runnable {
     
     private InteractiveTile iTile[] = new InteractiveTile[900];
     final private ArrayList<Entity> entityList = new ArrayList<>();
+    final private ArrayList<Entity> particleList = new ArrayList<>(); 
     
     final private CollisionChecker cChecker = new CollisionChecker(this);
     final private TileManager tileM = new TileManager(this);
@@ -98,35 +100,19 @@ public class GamePanel extends JPanel implements Runnable {
 
     // GETTER & SETTER
 
-    // GAMEPANEL
+    public int getTileSize() { return this.tileSize; }
+    public int getScreenWidth() { return this.screenWidth; }
+    public int getScreenHeight() { return this.screenHeight; }
+    public int getMaxWorldCol() { return this.maxWorldCol; }
+    public int getMaxWorldRow() { return this.maxWorldRow; }
+    public int getWorldWidth() { return this.worldWidth; }
+    public int getWorldHeight() { return this.worldHeight; }
 
-    public int getTileSize() {
-        return this.tileSize;
-    }
+    // KEYHANDLER
+    public void setKeyHActionPressed(boolean pressed) { this.keyH.setActionPressed(pressed); }
 
-    public int getScreenWidth() {
-        return this.screenWidth;
-    }
-
-    public int getScreenHeight() {
-        return this.screenHeight;
-    }
-
-    public int getMaxWorldCol() {
-        return this.maxWorldCol;
-    }
-
-    public int getMaxWorldRow() {
-        return this.maxWorldRow;
-    }
-
-    public int getWorldWidth() {
-        return this.worldWidth;
-    }
-
-    public int getWorldHeight() {
-        return this.worldHeight;
-    }
+    // EVENT HANDLER
+    public void getEventHandlerCheckEvent() { this.eHandler.checkEvent(); }
 
     // MUSIC AND SOUND EFFECT
     public void playMusic(int i) {
@@ -135,10 +121,7 @@ public class GamePanel extends JPanel implements Runnable {
         this.music.loop();
     }
 
-    public void stopMusic() {
-        this.music.stop();
-    }
-
+    public void stopMusic() { this.music.stop(); }
     public void playSoundEffect(int i) {
         this.soundEffect.setFile(i);
         this.soundEffect.play();
@@ -152,174 +135,97 @@ public class GamePanel extends JPanel implements Runnable {
         }
     }
 
-    public int getUICommandNum() {
-        return this.ui.getCommandNum();
-    }
-
-    public void setUICommandNum(int num) {
-        this.ui.setCommandNum(num);
-    }
+    public int getUICommandNum() { return this.ui.getCommandNum(); }
+    public void setUICommandNum(int num) { this.ui.setCommandNum(num); }
 
     // PLAYER
-
-    public int getPlayerWorldX() {
-        return this.player.getWorldX();
-    }
-
-    public int getPlayerWorldY() {
-        return this.player.getWorldY();
-    }
-
-    public Player getPlayer() {
-        return this.player;
-    }
-
-    public int getPlayerScreenX() {
-        return this.player.getScreenX();
-    }
-
-    public int getPlayerScreenY() {
-        return this.player.getScreenY();
-    }
-
-    public int getPlayerGold() {
-        return this.player.getGold();
-    }
-
+    public int getPlayerWorldX() { return this.player.getWorldX(); }
+    public int getPlayerWorldY() { return this.player.getWorldY(); }
+    public Player getPlayer() { return this.player; }
+    public Rectangle getPlayerSolidArea() { return this.player.getSolidArea(); }
+    public int getPlayerSolidAreaX() { return this.player.getSolidAreaX(); }
+    public void setPlayerSolidAreaX(int x) { this.player.setSolidAreaX(x); }
+    public int getPlayerSolidAreaY() { return this.player.getSolidAreaY(); }
+    public void setPlayerSolidAreaY(int y) { this.player.setSolidAreaY(y); }
+    public int getPlayerSolidAreaDefaultX() { return this.player.getSolidAreaDefaultX(); }
+    public int getPlayerSolidAreaDefaultY() { return this.player.getSolidAreaDefaultY(); }
+    public int getPlayerScreenX() { return this.player.getScreenX(); }
+    public int getPlayerScreenY() { return this.player.getScreenY(); }
+    public String getPlayerDirection() { return this.player.getDirection(); }
+    public int getPlayerGold() { return this.player.getGold(); }
     public void setPlayerGold(int gold) {
         this.player.setGold(gold);
         if (this.player.getGold() < 0 && this.gameState != State.GAME_OVER) {
             setGameOver("Gold habis. Game over.");
         }
     }
+    public BufferedImage getPlayerDown1() { return this.player.getDown1(); }
+    public BufferedImage getPlayerMainCharacter() { return this.player.getImageMainCharacter(); }
 
-    public FarmSystem getFarmSystem() {
-        return this.farmSystem;
-    }
-
-    public GameState getFarmState() {
-        return this.farmSystem.getGameState();
-    }
-
-    public BufferedImage getPlayerDown1() {
-        return this.player.getDown1();
-    }
+    public FarmSystem getFarmSystem() { return this.farmSystem; }
+    public GameState getFarmState() { return this.farmSystem.getGameState(); }
 
     private void handleFarmMouseInput(MouseEvent e) {
-        if (gameState == null || gameState != GamePanel.State.PLAY) {
-            return;
-        }
-
+        if (gameState == null || gameState != GamePanel.State.PLAY) return;
         if (SwingUtilities.isLeftMouseButton(e)) {
             farmSystem.interactAtScreenPoint(e.getX(), e.getY());
             return;
         }
-
         if (SwingUtilities.isRightMouseButton(e) || e.isPopupTrigger()) {
             farmSystem.toggleFirebreakAtScreenPoint(e.getX(), e.getY());
         }
     }
 
     // TILE MANAGER
-
-    public void loadMap() {
-        this.tileM.loadMap("farm_land");
-    }
-
-    public int getMapTileNum(int col, int row) {
-        return this.tileM.getMapTileNum(col, row);
-    }
-
-    public boolean getTileCollision(int i) {
-        return this.tileM.getTileCollision(i);
-    }
+    public void loadMap() { this.tileM.loadMap("farm_land"); }
+    public int getMapTileNum(int col, int row) { return this.tileM.getMapTileNum(col, row); }
+    public boolean getTileCollision(int i) { return this.tileM.getTileCollision(i); }
 
     // INTERACTIVE TILE
-    public void setInteractiveTile(int i, InteractiveTile iTile) {
-        this.iTile[i] = iTile;
-    }
+    public InteractiveTile[] getInteractiveTile() { return this.iTile; }
+    public InteractiveTile getInteractiveTile(int i) { return this.iTile[i]; }
+    public boolean getInteractiveTileDestructible(int i) { return this.iTile[i].getDestructible(); }
+    public void setInteractiveTile(int i, InteractiveTile iTile) { this.iTile[i] = iTile; }
+    public boolean interactiveTileIsCorrectItem(int i, Entity entity) { return this.iTile[i].isCorrectItem(entity); }
+    public boolean getInteractiveTileInvincible(int i) { return this.iTile[i].getInvincible(); }
+    public void interactiveTilePlaySoundEffect(int i) { this.iTile[i].playSoundEffect(); }
+    public boolean getInteractiveTileIsAttackable(int i, Entity attacker) { return this.iTile[i].isAttackable(attacker); }
+    public void setInteractiveTileLife(int i, int life) { this.iTile[i].setLife(life); }
+    public int getInteractiveTileLife(int i) { return this.iTile[i].getLife(); }
+    public void setInteractiveTileInvincible(int i, boolean invincible) { this.iTile[i].setInvincible(invincible); }
+    public boolean getInteractiveTileInvicible(int i) { return this.iTile[i].getInvincible(); } // Typo sync
+    public InteractiveTile getInteractiveTileDestroyForm(int i) { return this.iTile[i].getDestroyForm(); }
 
     // ENTITY OBJECT
-    public int getObjectLength() {
-        return this.obj.length;
-    }
-
-    public Entity getObject(int i) {
-        return this.obj[i];
-    }
-    
-    public void setObject(int i, Entity entity) {
-        this.obj[i] = entity;
-    }
-
+    public int getObjectLength() { return this.obj.length; }
+    public Entity getObject(int i) { return this.obj[i]; }
+    public void setObject(int i, Entity entity) { this.obj[i] = entity; }
     public void setObject(int i, Entity object, int worldX, int worldY) {
         this.obj[i] = object;
         this.obj[i].setWorldX(worldX);
         this.obj[i].setWorldY(worldY);
     }
+    public int getObjectType(int i) { return this.obj[i].getType().ordinal(); }
+    public void setObjectUse(int i, Entity entity) { this.obj[i].use(entity); }
+    public int getObjectWorldX(int i) { return this.obj[i].getWorldX(); }
+    public int getObjectWorldY(int i) { return this.obj[i].getWorldY(); }
+    public Rectangle getObjectSolidArea(int i) { return this.obj[i].getSolidArea(); }
+    public int getObjectSolidAreaX(int i) { return this.obj[i].getSolidAreaX(); }
+    public void setObjectSolidAreaX(int i, int x) { this.obj[i].setSolidAreaX(x); }
+    public int getObjectSolidAreaY(int i) { return this.obj[i].getSolidAreaY(); }
+    public void setObjectSolidAreaY(int i, int y) { this.obj[i].setSolidAreaY(y); }
+    public int getObjectSolidAreaDefaultX(int i) { return this.obj[i].getSolidAreaDefaultX(); }
+    public int getObjectSolidAreaDefaultY(int i) { return this.obj[i].getSolidAreaDefaultY(); }
 
-    public int getObjectType(int i) {
-        return this.obj[i].getType();
-    }
-
-    public void setObjectUse(int i, Entity entity) {
-        this.obj[i].use(entity);
-    }
-
-    public int getObjectWorldX(int i) {
-        return this.obj[i].getWorldX();
-    }
-
-    public int getObjectWorldY(int i) {
-        return this.obj[i].getWorldY();
-    }
-
-    public Rectangle getObjectSolidArea(int i) {
-        return this.obj[i].getSolidArea();
-    }
-
-    public int getObjectSolidAreaX(int i) {
-        return this.obj[i].getSolidAreaX();
-    }
-
-    public void setObjectSolidAreaX(int i, int x) {
-        this.obj[i].setSolidAreaX(x);
-    }
-
-    public int getObjectSolidAreaY(int i) {
-        return this.obj[i].getSolidAreaY();
-    }
-
-    public void setObjectSolidAreaY(int i, int y) {
-        this.obj[i].setSolidAreaY(y);
-    }
-
-    public int getObjectSolidAreaDefaultX(int i) {
-        return this.obj[i].getSolidAreaDefaultX();
-    }
-
-    public int getObjectSolidAreaDefaultY(int i) {
-        return this.obj[i].getSolidAreaDefaultY();
-    }
-
-    // COLLISION CHCEKER
-    public int getCheckObject(Entity entity, boolean player) {
-        return this.cChecker.checkObject(entity, player);
-    }
-
-    public void checkTile(Entity entity) {
-        this.cChecker.checkTile(entity);
-    }
+    // COLLISION CHECKER
+    public int getCheckObject(Entity entity, boolean player) { return this.cChecker.checkObject(entity, player); }
+    public int getCheckInteractiveTile(Entity entity, Entity[] target) { return this.cChecker.checkEntity(entity, target); }
+    public boolean getCheckPlayer(Entity entity) { return this.cChecker.checkPlayer(entity); }
+    public void checkTile(Entity entity) { this.cChecker.checkTile(entity); }
 
     // GAME STATE
-    public void setGameState(State state) {
-        this.gameState = state;
-    }
-
-    public State getGameState() {
-        return this.gameState;
-    }
-
+    public void setGameState(State state) { this.gameState = state; }
+    public State getGameState() { return this.gameState; }
     public void setGameOver(String reason) {
         this.gameState = State.GAME_OVER;
         this.farmSystem.getGameState().setLastNotification(reason);
@@ -330,15 +236,15 @@ public class GamePanel extends JPanel implements Runnable {
     public void returnHomeFromGameOver() {
         this.player.resetToDefaultValues();
         int currentGold = this.player.getGold();
-        if (currentGold != 1000) {
-            this.player.setGold(1000 - currentGold);
-        }
+        if (currentGold != 1000) this.player.setGold(1000 - currentGold);
         this.farmSystem.resetSession();
         this.ui.resetNotifications();
         this.ui.setCommandNum(0);
         this.gameState = State.TITLE;
     }
 
+    // PARTICLE
+    public void addParticleList(Entity particle) { this.particleList.add(particle); }
 
     public int getCameraX() {
         int cameraX = player.getWorldX() - player.getScreenX();
@@ -357,11 +263,8 @@ public class GamePanel extends JPanel implements Runnable {
     public void setupGame() {
         this.aSetter.setObject();
         this.aSetter.setInteractiveTile();
-        if (this.player.getGold() == 0) {
-            this.player.setGold(1000);
-        }
+        if (this.player.getGold() == 0) this.player.setGold(1000);
         this.gameState = GamePanel.State.TITLE;
-
         tempScreen = new BufferedImage(screenWidth, screenHeight, BufferedImage.TYPE_INT_ARGB);
         g2 = (Graphics2D)tempScreen.getGraphics();
     }
@@ -391,10 +294,7 @@ public class GamePanel extends JPanel implements Runnable {
                 drawToScreen();
                 delta--;
             }
-
-            if(timer >= 1000000000) {
-                timer = 0;
-            }
+            if(timer >= 1000000000) timer = 0;
         }
     }
 
@@ -403,56 +303,41 @@ public class GamePanel extends JPanel implements Runnable {
             // PLAYER
             player.update();
 
-            if (this.keyH.consumeAutoPlantPressed()) {
-                this.farmSystem.toggleAutoPlantMode();
-            }
-            if (this.keyH.consumeAutoSellPressed()) {
-                this.farmSystem.toggleAutoSellMode();
-            }
-            if (this.keyH.consumeAutoHarvestPressed()) {
-                this.farmSystem.toggleAutoHarvestMode();
-            }
+            // FARM SYSTEM
+            if (this.keyH.consumeAutoPlantPressed()) this.farmSystem.toggleAutoPlantMode();
+            if (this.keyH.consumeAutoSellPressed()) this.farmSystem.toggleAutoSellMode();
+            if (this.keyH.consumeAutoHarvestPressed()) this.farmSystem.toggleAutoHarvestMode();
             if (this.keyH.consumeActionPressed()) {
                 if (!interactWorldObject(this.player)) {
                     this.farmSystem.interact(this.player);
                 }
             }
-            if (this.keyH.consumeFirebreakPressed()) {
-                this.farmSystem.toggleFirebreakAtPlayer();
-            }
-            if (this.keyH.consumeNextDayPressed()) {
-                this.farmSystem.nextDay();
-            }
-            if (this.keyH.consumeSellPressed()) {
-                this.farmSystem.sellInventory();
-            }
+            if (this.keyH.consumeFirebreakPressed()) this.farmSystem.toggleFirebreakAtPlayer();
+            if (this.keyH.consumeNextDayPressed()) this.farmSystem.nextDay();
+            if (this.keyH.consumeSellPressed()) this.farmSystem.sellInventory();
 
             this.farmSystem.update();
 
-            if (this.gameState == GamePanel.State.GAME_OVER) {
-                return;
-            }
+            if (this.gameState == GamePanel.State.GAME_OVER) return;
 
             for(int i = 0; i < this.iTile.length; i++) {
-                if(this.iTile[i] != null) {
-                    this.iTile[i].update();
+                if(this.iTile[i] != null) this.iTile[i].update();
+            }
+
+            // PARTICLE
+            for(int i = 0; i < this.particleList.size(); i++) {
+                if(this.particleList.get(i) != null) {
+                    if(this.particleList.get(i).getAlive() == true) this.particleList.get(i).update();
+                    if(this.particleList.get(i).getAlive() == false) this.particleList.remove(i--);
                 }
             }
-        }
-        if(this.gameState == GamePanel.State.PAUSE) {
-            // NOTHING
-        }
-        if(this.gameState == GamePanel.State.GAME_OVER) {
-            // NOTHING
         }
     }
 
     public boolean interactWorldObject(Entity entity) {
         int objectIndex = this.cChecker.checkObject(entity, true);
-        if (objectIndex == 999 || this.obj[objectIndex] == null) {
-            return false;
-        }
-        if (this.obj[objectIndex].getType() == entity.type_npc) {
+        if (objectIndex == 999 || this.obj[objectIndex] == null) return false;
+        if (this.obj[objectIndex].getType() == Entity.Type.NPC) {
             this.obj[objectIndex].use(entity);
             return true;
         }
@@ -460,43 +345,34 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void drawToTempScreen() {
-        // DEBUG
-        long drawStart = 0;
-        if (this.keyH.getShowDebugText() == true) {
-            drawStart = System.nanoTime();
-        }
-
         // TILE
         tileM.draw(g2);
 
-        // FARM SYSTEM OVERLAY
+        // FARM SYSTEM
         this.farmSystem.draw(g2);
 
-        // FIXED MAP OBJECTS
+        // MAP OBJECTS
         tileM.drawObjectLayer(g2);
 
         // INTERACTIVE TILE
         for(int i = 0; i < this.iTile.length; i++) {
-            if(this.iTile[i] != null) {
-                this.iTile[i].draw(g2);
-            }
+            if(this.iTile[i] != null) this.iTile[i].draw(g2);
         }
 
         // ADD ENTITY TO THE LIST
         this.entityList.add(this.player);
-
         for(int i = 0; i < this.obj.length; i++) {
-            if(this.obj[i] != null) {
-                this.entityList.add(this.obj[i]);
-            }
+            if(this.obj[i] != null) this.entityList.add(this.obj[i]);
+        }
+        for(int i = 0; i < this.particleList.size(); i++) {
+            if(this.particleList.get(i) != null) this.entityList.add(this.particleList.get(i));
         }
 
         // SORT
         Collections.sort(entityList, new Comparator<Entity>() {
             @Override
             public int compare(Entity e1, Entity e2) {
-                int result = Integer.compare(e1.getWorldY(), e2.getWorldY());
-                return result;
+                return Integer.compare(e1.getWorldY(), e2.getWorldY());
             }
         });
 
@@ -512,20 +388,13 @@ public class GamePanel extends JPanel implements Runnable {
 
         // DEBUG
         if (this.keyH.getShowDebugText() == true) {
-            long drawEnd = System.nanoTime();
-            long passed = drawEnd - drawStart;
-
             g2.setFont(new Font("Arial", Font.PLAIN, 20));
             g2.setColor(Color.white);
-            int x = 10;
-            int y = 400;
-            int lineHeight = 20;
-
+            int x = 10, y = 400, lineHeight = 20;
             g2.drawString("WorldX: " + this.player.getWorldX(), x, y); y += lineHeight;
             g2.drawString("WorldY: " + this.player.getWorldY(), x, y); y += lineHeight;
             g2.drawString("Col: " + (this.player.getWorldX() + this.player.getSolidAreaX()) / tileSize, x, y); y += lineHeight;
             g2.drawString("Row: " + (this.player.getWorldY() + this.player.getSolidAreaY()) / tileSize, x, y); y += lineHeight;
-            g2.drawString("Draw Time: " + passed, x, y); y += lineHeight;
         }
     }
 
@@ -540,9 +409,6 @@ public class GamePanel extends JPanel implements Runnable {
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if (tempScreen != null) {
-            g.drawImage(tempScreen, 0, 0, screenWidth2, screenHeight2, null);
-        }
+        if (tempScreen != null) g.drawImage(tempScreen, 0, 0, screenWidth2, screenHeight2, null);
     }
-
 }

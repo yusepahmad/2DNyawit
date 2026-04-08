@@ -138,8 +138,11 @@ public class UserInterface {
         if (lower.contains("panen") || lower.contains("tanam") || lower.contains("tumbuh")) {
             return createBanner(BannerTone.SUCCESS, "Aktivitas Kebun", text);
         }
-        if (lower.contains("gold tidak cukup") || lower.contains("tidak bisa")) {
+        if(lower.contains("gold tidak cukup") || lower.contains("tidak bisa")) {
             return createBanner(BannerTone.WARNING, "Peringatan", text);
+        }
+        if (lower.contains("got a")) {
+            return createBanner(BannerTone.INFO, "Item Baru", text);
         }
         return createBanner(BannerTone.INFO, "Info", text);
     }
@@ -210,7 +213,7 @@ public class UserInterface {
         // BLUE BOY IMAGE
         x = this.gp.getScreenWidth() / 2 - (this.gp.getTileSize() * 2) / 2;
         y += this.gp.getTileSize()*2;
-        this.g2.drawImage(this.gp.getPlayerDown1(), x, y, this.gp.getTileSize() * 2, this.gp.getTileSize() * 2, null);
+        this.g2.drawImage(this.gp.getPlayerMainCharacter(), x, y, this.gp.getTileSize() * 2, this.gp.getTileSize() * 2, null);
 
         // MENU
         this.g2.setFont(this.g2.getFont().deriveFont(Font.BOLD, 48f));
@@ -426,7 +429,7 @@ public class UserInterface {
 
     private void drawControlHint() {
         this.g2.setFont(this.g2.getFont().deriveFont(Font.PLAIN, 14F));
-        String text = "Klik kiri/E: aksi kebun | Klik kanan/F: firebreak (-gold) | H: auto tanam | K: auto panen | J: auto jual | N: next day | Q: jual stok | P: pause";
+        String text = "E/Enter: aksi kebun | F: serang | B: firebreak (-gold) | H: auto tanam | K: auto panen | J: auto jual | N: next day | Q: jual stok | P: pause";
         int x = 16;
         int y = this.gp.getScreenHeight() - 18;
 

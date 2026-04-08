@@ -13,7 +13,7 @@ public class ObjGold extends Entity {
         super(gp);
         this.gp = gp;
 
-        setType(type_pickupOnly);
+        setType(Type.PICKUP_ONLY);
         setName("Gold");
         setValue(1);
         down1 = setup("/objects/gold/goldie", this.gp.getTileSize(), this.gp.getTileSize());

@@ -11,7 +11,7 @@ public class ObjAxe extends Entity {
         super(gp);
         this.gp = gp;
 
-        setType(type_pickupOnly);
+        setType(Type.AXE);
         setName("Woodcutter's Axe");
         down1 = setup("/objects/weapons/axe", gp.getTileSize(), gp.getTileSize());
         setAttackValue(2);
