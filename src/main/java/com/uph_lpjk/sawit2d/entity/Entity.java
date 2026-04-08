@@ -1,5 +1,6 @@
 package com.uph_lpjk.sawit2d.entity;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
@@ -19,49 +20,56 @@ public class Entity {
     protected Rectangle solidArea = new Rectangle(0, 0, 48, 48);
     protected Rectangle attackArea = new Rectangle(0, 0, 0, 0);
     protected BufferedImage image, image2, image3;
+    protected BufferedImage mainCharacter;
     protected BufferedImage up1, up2, down1, down2, left1, left2, right1, right2;
     protected BufferedImage attackUp1, attackUp2, attackDown1, attackDown2, attackLeft1, attackLeft2, attackRight1, attackRight2;
     
     final private GamePanel gp;
     
-    protected int spriteCounter = 0;
     protected int spriteNum = 1;
     
-    private String direction = "down";
-    private boolean collisionOn = false;
-
+    // COUNTER
+    protected int invincibleCounter = 0;
+    protected int spriteCounter = 0;
+    
     // STATE
     protected boolean collision;
     protected boolean attacking;
 
+    private String direction = "down";
+    private boolean collisionOn = false;
+    private boolean invincible = false;
+    private boolean alive = true;
+
     // ATTRIBUTES OBJECT / CHARACTER
-    private String name;
-    private int life;
-    private int gold;
+    protected String name;
+    protected int maxLife;
+    protected int life;
+    protected int gold;
+    protected int strength;
+    protected int attack;
+    protected Entity currentWeapon;
 
     // ITEM ATTRIBUTES
-    private String description;
-    private int attackValue;
-    private int value;
+    protected String description;
+    protected int attackValue;
+    protected int value;
 
     // TYPE
-    private int type; // 0 = player, 1 = npc
-    final public int type_player = 0;
-    final public int type_npc = 1;
-    final public int type_sword = 2;
-    final public int type_axe = 3;
-    final public int type_consumable = 4;
-    final public int type_pickupOnly = 5;
+    public enum Type { PLAYER, NPC, SWORD, AXE, CONSUMABLE, PICKUP_ONLY, HOME }
+    private Type type;
     
     public Entity(GamePanel gp) {
         this.gp = gp;
     }
     
     public void use(Entity entity) {}
+    public void setAction() {}
     public BufferedImage getDown1() { return this.down1; }
     public BufferedImage getImage() { return this.image; }
     public BufferedImage getImage2() { return this.image2; }
     public BufferedImage getImage3() { return this.image3; }
+    public BufferedImage getImageMainCharacter() { return this.mainCharacter; }
 
     public int getTileSize() {
         return this.gp.getTileSize();
@@ -159,6 +167,21 @@ public class Entity {
         this.collision = collision;
     }
 
+    public boolean getInvincible() {
+        return this.invincible;
+    }
+
+    public void setInvincible(boolean invincible) {
+        this.invincible = invincible;
+    }
+
+    public boolean getAlive() {
+        return this.alive;
+    }
+
+    public void setAlive(boolean alive) {
+        this.alive = alive;
+    }
 
     // OBJECT ATTRIBUTE
     public void setName(String name) {
@@ -185,12 +208,24 @@ public class Entity {
         return this.gold;
     }
 
+    public Entity getCurrentWeapon() {
+        return this.currentWeapon;
+    }
+
+    // RPG ATTRIBUTES (Restored from Branch A)
+    public int getStrength() { return strength; }
+    public void setStrength(int strength) { this.strength = strength; }
+    public int getAttack() { return attack; }
+    public void setAttack(int attack) { this.attack = attack; }
+    public int getMaxLife() { return maxLife; }
+    public void setMaxLife(int maxLife) { this.maxLife = maxLife; }
+
     // TYPE
-    public int getType() {
+    public Type getType() {
         return this.type;
     }
 
-    public void setType(int type) {
+    public void setType(Type type) {
         this.type = type;
     }
 
@@ -219,12 +254,53 @@ public class Entity {
         return this.value;
     }
 
+    public boolean isPickupOnly() {
+        return this.type == Type.PICKUP_ONLY;
+    }
+
+    public Color getParticleColor() {
+        Color color = null;
+        return color;
+    }
+
+    public int getParticleSize() {
+        int size = 0;
+        return size;
+    }
+
+    public int getParticleSpeed () {
+        int speed = 0;
+        return speed;
+    }
+
+    public int getParticleMaxLife() {
+        int maxLife = 0;
+        return maxLife;
+    }
+
+    public void generateParticle(Entity generator, Entity target) {
+        Color color = generator.getParticleColor();
+        int size = generator.getParticleSize();
+        int speed = generator.getParticleSpeed();
+        int maxLife = generator.getParticleMaxLife();
+
+        Particle p1 = new Particle(gp, target, color, size, speed, maxLife, -2, -1);
+        Particle p2 = new Particle(gp, target, color, size, speed, maxLife, 2, -1);
+        Particle p3 = new Particle(gp, target, color, size, speed, maxLife, -2, 1);
+        Particle p4 = new Particle(gp, target, color, size, speed, maxLife, 2, 1);
+
+        this.gp.addParticleList(p1);
+        this.gp.addParticleList(p2);
+        this.gp.addParticleList(p3);
+        this.gp.addParticleList(p4);
+    }
+
     public BufferedImage setup(String imagePath, int width, int height) {
         UtilityTools uTool = new UtilityTools();
         BufferedImage image = null;
 
         try {
-            String fullPath = imagePath + ".png";
+            String fullPath = imagePath.endsWith(".png") ? imagePath : imagePath + ".png";
             InputStream inputStream = getClass().getResourceAsStream(fullPath);
 
             if(inputStream == null) {
@@ -275,7 +351,42 @@ public class Entity {
                 image = this.down1;
             }
 
+            // if (type == Type.HOME) {
+            //     g2.drawImage(getTopLeftImage(), screenX, screenY, null);
+            //     g2.drawImage(getTopRightImage(), screenX + this.gp.getTileSize(), screenY, null);
+            //     g2.drawImage(getBottomLeftImage(), screenX, screenY + this.gp.getTileSize(), null);
+            //     g2.drawImage(getBottomRightImage(), screenX + this.gp.getTileSize(), screenY + this.gp.getTileSize(), null);
+            // } else {
             g2.drawImage(image, screenX, screenY, null);
+            // }
+        }
+    }
+
+    public void update() {
+        setAction();
+
+        this.collisionOn = false;
+        this.gp.checkTile(this);
+        this.gp.getCheckObject(this, false);
+        this.gp.getCheckInteractiveTile(this, this.gp.getInteractiveTile());
+
+        if(collisionOn == false) {
+            switch (direction) {
+                case "up": worldY -= speed; break;
+                case "down": worldY += speed; break;
+                case "left": worldX -= speed; break;
+                case "right": worldX += speed; break;
+            }
+        }
+
+        spriteCounter++;
+        if(spriteCounter > 12) {
+            if(spriteNum == 1) {
+                spriteNum = 2;
+            } else if(spriteNum == 2) {
+                spriteNum = 1;
+            }
+            spriteCounter = 0;
         }
     }
 }

@@ -123,4 +123,89 @@ public class CollisionChecker {
         }
         return index;
     }
+
+    // Branch A Integration: Added checkEntity for interacting with trees/targets
+    public int checkEntity(Entity entity, Entity[] target) {
+        int index = 999;
+
+        for(int i = 0; i < target.length; i++) {
+            if(target[i] != null) {
+                // Get entity's solid area position
+                entity.setSolidAreaX(entity.getWorldX() + entity.getSolidAreaX());
+                entity.setSolidAreaY(entity.getWorldY() + entity.getSolidAreaY());
+
+                // Get the object's solid area position
+                target[i].setSolidAreaX(target[i].getWorldX() + target[i].getSolidAreaX());
+                target[i].setSolidAreaY(target[i].getWorldY() + target[i].getSolidAreaY());
+
+                switch (entity.getDirection()) {
+                    case "up":
+                        entity.setSolidAreaY(entity.getSolidAreaY() - entity.getSpeed());
+                        break;
+                    case "down":
+                        entity.setSolidAreaY(entity.getSolidAreaY() + entity.getSpeed());
+                        break;
+                    case "right":
+                        entity.setSolidAreaX(entity.getSolidAreaX() + entity.getSpeed());
+                        break;
+                    case "left":
+                        entity.setSolidAreaX(entity.getSolidAreaX() - entity.getSpeed());
+                        break;
+                }
+
+                if(entity.getSolidArea().intersects(target[i].getSolidArea())) {
+                    if(target[i] != entity) {
+                        entity.setCollisionOn(true);
+                        index = i;
+                    }
+                }
+
+                entity.setSolidAreaX(entity.getSolidAreaDefaultX());
+                entity.setSolidAreaY(entity.getSolidAreaDefaultY());
+                target[i].setSolidAreaX(target[i].getSolidAreaDefaultX());
+                target[i].setSolidAreaY(target[i].getSolidAreaDefaultY());
+            }
+        }
+        return index;
+    }
+
+    // Branch A Integration: Added checkPlayer for NPC/Object interactions
+    public boolean checkPlayer(Entity entity) {
+        boolean contactPlayer = false;
+
+        // Get entity's solid area position
+        entity.setSolidAreaX(entity.getWorldX() + entity.getSolidAreaX());
+        entity.setSolidAreaY(entity.getWorldY() + entity.getSolidAreaY());
+
+        // Get player's solid area position
+        this.gp.setPlayerSolidAreaX(this.gp.getPlayerWorldX() + this.gp.getPlayerSolidAreaX());
+        this.gp.setPlayerSolidAreaY(this.gp.getPlayerWorldY() + this.gp.getPlayerSolidAreaY());
+
+        switch (entity.getDirection()) {
+            case "up":
+                entity.setSolidAreaY(entity.getSolidAreaY() - entity.getSpeed());
+                break;
+            case "down":
+                entity.setSolidAreaY(entity.getSolidAreaY() + entity.getSpeed());
+                break;
+            case "right":
+                entity.setSolidAreaX(entity.getSolidAreaX() + entity.getSpeed());
+                break;
+            case "left":
+                entity.setSolidAreaX(entity.getSolidAreaX() - entity.getSpeed());
+                break;
+        }
+
+        if(entity.getSolidArea().intersects(this.gp.getPlayerSolidArea())) {
+            entity.setCollisionOn(true);
+            contactPlayer = true;
+        }
+
+        entity.setSolidAreaX(entity.getSolidAreaDefaultX());
+        entity.setSolidAreaY(entity.getSolidAreaDefaultY());
+        this.gp.setPlayerSolidAreaX(this.gp.getPlayerSolidAreaDefaultX());
+        this.gp.setPlayerSolidAreaY(this.gp.getPlayerSolidAreaDefaultY());
+
+        return contactPlayer;
+    }
 }
