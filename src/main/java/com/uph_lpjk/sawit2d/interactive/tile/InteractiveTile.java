@@ -1,13 +1,13 @@
 package com.uph_lpjk.sawit2d.interactive.tile;
 
-import java.awt.Graphics2D;
-
 import com.uph_lpjk.sawit2d.controller.GamePanel;
 import com.uph_lpjk.sawit2d.entity.Entity;
 
+import java.awt.Graphics2D;
+
 public class InteractiveTile extends Entity {
-    
-    final private GamePanel gp;
+
+    private final GamePanel gp;
     protected boolean destructible = false;
 
     public InteractiveTile(GamePanel gp, int col, int row) {
@@ -36,9 +36,9 @@ public class InteractiveTile extends Entity {
     }
 
     public void update() {
-        if(getInvincible() == true) {
+        if (getInvincible() == true) {
             invincibleCounter++;
-            if(invincibleCounter > 20) {
+            if (invincibleCounter > 20) {
                 setInvincible(false);
                 invincibleCounter = 0;
             }
@@ -49,15 +49,14 @@ public class InteractiveTile extends Entity {
         int screenX = getWorldX() - this.gp.getCameraX();
         int screenY = getWorldY() - this.gp.getCameraY();
 
-        if(
-            getWorldX() + this.gp.getTileSize() > this.gp.getCameraX() &&
-            getWorldX() - this.gp.getTileSize() < this.gp.getCameraX() + this.gp.getScreenWidth() &&
-            getWorldY() + this.gp.getTileSize() > this.gp.getCameraY() &&
-            getWorldY() - this.gp.getTileSize() < this.gp.getCameraY() + this.gp.getScreenHeight() 
-        ) {
+        if (getWorldX() + this.gp.getTileSize() > this.gp.getCameraX()
+                && getWorldX() - this.gp.getTileSize()
+                        < this.gp.getCameraX() + this.gp.getScreenWidth()
+                && getWorldY() + this.gp.getTileSize() > this.gp.getCameraY()
+                && getWorldY() - this.gp.getTileSize()
+                        < this.gp.getCameraY() + this.gp.getScreenHeight()) {
 
             g2.drawImage(getDown1(), screenX, screenY, null);
-
         }
     }
 }

@@ -108,7 +108,8 @@ public class FarmGrid {
                     continue;
                 }
                 FarmTileType type = tiles[r][c].getType();
-                if (type != FarmTileType.SAWIT && !(includeFirebreak && type == FarmTileType.FIREBREAK)) {
+                if (type != FarmTileType.SAWIT
+                        && !(includeFirebreak && type == FarmTileType.FIREBREAK)) {
                     continue;
                 }
 
@@ -134,7 +135,8 @@ public class FarmGrid {
         }
     }
 
-    private int floodCount(int startRow, int startCol, boolean[][] visited, boolean includeFirebreak) {
+    private int floodCount(
+            int startRow, int startCol, boolean[][] visited, boolean includeFirebreak) {
         int count = 0;
         ArrayList<Point> queue = new ArrayList<>();
         queue.add(new Point(startRow, startCol));
@@ -149,7 +151,8 @@ public class FarmGrid {
             }
 
             FarmTileType type = tiles[row][col].getType();
-            if (type != FarmTileType.SAWIT && !(includeFirebreak && type == FarmTileType.FIREBREAK)) {
+            if (type != FarmTileType.SAWIT
+                    && !(includeFirebreak && type == FarmTileType.FIREBREAK)) {
                 continue;
             }
 

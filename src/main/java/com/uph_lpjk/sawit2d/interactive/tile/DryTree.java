@@ -4,7 +4,7 @@ import com.uph_lpjk.sawit2d.controller.GamePanel;
 import com.uph_lpjk.sawit2d.entity.Entity;
 
 public class DryTree extends InteractiveTile {
-    
+
     GamePanel gp;
 
     public DryTree(GamePanel gp, int col, int row) {
@@ -13,7 +13,9 @@ public class DryTree extends InteractiveTile {
         setWorldX(this.gp.getTileSize() * col);
         setWorldY(this.gp.getTileSize() * row);
 
-        down1 = setup("/tiles_interactive/drytree", this.gp.getTileSize(), this.gp.getTileSize());
+        down1 =
+                setupImage(
+                        "/tiles_interactive/drytree", this.gp.getTileSize(), this.gp.getTileSize());
         destructible = true;
         setLife(3);
     }
@@ -21,7 +23,7 @@ public class DryTree extends InteractiveTile {
     @Override
     public boolean isCorrectItem(Entity entity) {
         boolean isCorrectItem = false;
-        if(entity.getCurrentWeapon() != null && entity.getCurrentWeapon().getType() == Type.AXE) {
+        if (entity.getCurrentWeapon() != null && entity.getCurrentWeapon().getType() == Type.AXE) {
             isCorrectItem = true;
         }
         return isCorrectItem;

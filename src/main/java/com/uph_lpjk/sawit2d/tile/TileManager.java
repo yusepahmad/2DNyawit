@@ -1,19 +1,20 @@
 package com.uph_lpjk.sawit2d.tile;
 
+import com.uph_lpjk.sawit2d.controller.GamePanel;
+import com.uph_lpjk.sawit2d.utility.AssetLoader;
+
 import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-import com.uph_lpjk.sawit2d.controller.GamePanel;
-import com.uph_lpjk.sawit2d.utility.AssetLoader;
-
 public class TileManager {
-    
-    final private GamePanel gp;
-    final private int tileSize;
-    final private int maxWorldCol;
-    final private int maxWorldRow;
+
+    private final GamePanel gp;
+    private final int tileSize;
+    private final int maxWorldCol;
+    private final int maxWorldRow;
 
     protected Tile[] tile;
     protected int mapTileNum[][];
@@ -38,10 +39,17 @@ public class TileManager {
         return this.mapTileNum[col][row];
     }
 
+    public BufferedImage getTileImage(int index) {
+        if (index < 0 || index >= this.tile.length || this.tile[index] == null) {
+            return null;
+        }
+        return this.tile[index].image;
+    }
+
     public boolean getTileCollision(int i) {
         return this.tile[i].collision;
     }
-    
+
     private void getTileImage() {
         setup(0, "tile", "grass00", false);
         setup(1, "tile", "grass00", false);
@@ -88,19 +96,34 @@ public class TileManager {
         setup(42, "tile", "hut", false);
         setup(43, "tile", "floor01", false);
         setup(44, "tile", "table01", true);
-    }
 
-    private void setup(int index, String imageName, boolean collision) {
-        setup(index, "tile", imageName, collision);
+        // FARM SPECIFIC TILES
+        setupCustom(45, false, "/tile/earth.png", "/tile/earth.png", "/tile/grass00.png");
+        setupCustom(46, false, "/sawit/sawit-fase-1.png");
+        setupCustom(47, false, "/sawit/sawit-fase-2.png");
+        setupCustom(48, false, "/sawit/sawit-panen.png");
+        setupCustom(49, false, "/tile/kebakaran.png", "/tile/kebakaran.png", "/tile/wall.png");
+        setupCustom(50, false, "/fire/api-1.png");
+        setupCustom(51, false, "/fire/api-3.png");
+        setupCustom(52, false, "/fire/api-5.png");
+        setupCustom(
+                53, false, "/tile/after banjir.png", "/tile/after-banjir.png", "/tile/water00.png");
+        setupCustom(54, false, "/tile/kebakaran-2.png", "/tile/kebakaran-2.png", "/tile/wall.png");
     }
 
     private void setup(int index, String folder, String imageName, boolean collision) {
-        setupCustom(index, collision, "/" + folder + "/" + imageName + ".png", folder + "/" + imageName + ".png", "../" + folder + "/" + imageName + ".png");
+        setupCustom(
+                index,
+                collision,
+                "/" + folder + "/" + imageName + ".png",
+                folder + "/" + imageName + ".png",
+                "../" + folder + "/" + imageName + ".png");
     }
 
     private void setupCustom(int index, boolean collision, String... candidates) {
         this.tile[index] = new Tile();
-        this.tile[index].image = this.assetLoader.loadImage(this.tileSize, this.tileSize, candidates);
+        this.tile[index].image =
+                this.assetLoader.loadImage(this.tileSize, this.tileSize, candidates);
         this.tile[index].collision = collision;
     }
 
@@ -112,13 +135,13 @@ public class TileManager {
             int col = 0;
             int row = 0;
 
-            while(row < this.maxWorldRow) {
+            while (row < this.maxWorldRow) {
                 String line = bufferedReader.readLine();
                 if (line == null) break;
 
                 String numbers[] = line.split(" ");
                 col = 0;
-                while(col < this.maxWorldCol && col < numbers.length) {
+                while (col < this.maxWorldCol && col < numbers.length) {
                     int num = Integer.parseInt(numbers[col]);
                     this.mapTileNum[col][row] = num;
                     col++;
@@ -141,7 +164,7 @@ public class TileManager {
         int screenWidth = gp.getScreenWidth();
         int screenHeight = gp.getScreenHeight();
 
-        while(worldCol < this.maxWorldCol && worldRow < this.maxWorldRow) {
+        while (worldCol < this.maxWorldCol && worldRow < this.maxWorldRow) {
             int tileNum = this.mapTileNum[worldCol][worldRow];
 
             int worldX = worldCol * this.tileSize;
@@ -150,17 +173,15 @@ public class TileManager {
             int screenX = worldX - cameraX;
             int screenY = worldY - cameraY;
 
-            if(
-                worldX + this.tileSize > cameraX &&
-                worldX - this.tileSize < cameraX + screenWidth &&
-                worldY + this.tileSize > cameraY &&
-                worldY - this.tileSize < cameraY + screenHeight
-            ) {
+            if (worldX + this.tileSize > cameraX
+                    && worldX - this.tileSize < cameraX + screenWidth
+                    && worldY + this.tileSize > cameraY
+                    && worldY - this.tileSize < cameraY + screenHeight) {
                 g2.drawImage(this.tile[tileNum].image, screenX, screenY, null);
             }
             worldCol++;
 
-            if(worldCol == this.maxWorldCol) {
+            if (worldCol == this.maxWorldCol) {
                 worldCol = 0;
                 worldRow++;
             }
@@ -182,12 +203,10 @@ public class TileManager {
 
                 int worldX = col * this.tileSize;
                 int worldY = row * this.tileSize;
-                if (
-                    worldX + this.tileSize < cameraX ||
-                    worldX - this.tileSize > cameraX + screenWidth ||
-                    worldY + this.tileSize < cameraY ||
-                    worldY - this.tileSize > cameraY + screenHeight
-                ) {
+                if (worldX + this.tileSize < cameraX
+                        || worldX - this.tileSize > cameraX + screenWidth
+                        || worldY + this.tileSize < cameraY
+                        || worldY - this.tileSize > cameraY + screenHeight) {
                     continue;
                 }
 

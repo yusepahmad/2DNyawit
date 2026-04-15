@@ -8,7 +8,8 @@ public class DisasterSystem {
     private final Random random = new Random();
     private static final int RISK_THRESHOLD = 12;
 
-    public boolean attemptDisaster(FarmGrid grid, GameState state, GamePanel gp, EconomySystem economy) {
+    public boolean attemptDisaster(
+            FarmGrid grid, GameState state, GamePanel gp, EconomySystem economy) {
         int risk = state.getRiskScore();
         if (risk < RISK_THRESHOLD) {
             return false;

@@ -1,9 +1,9 @@
 package com.uph_lpjk.sawit2d.object;
 
-import java.awt.image.BufferedImage;
-
 import com.uph_lpjk.sawit2d.controller.GamePanel;
 import com.uph_lpjk.sawit2d.entity.Entity;
+
+import java.awt.image.BufferedImage;
 
 public class ObjGarageTopLeft extends Entity {
     public ObjGarageTopLeft(GamePanel gp) {
@@ -12,7 +12,7 @@ public class ObjGarageTopLeft extends Entity {
         setType(Type.HOME);
         setName("Garage");
         setCollision(true);
-        down1 = setup("/place/garage/garage-top-left-1", gp.getTileSize(), gp.getTileSize());
+        down1 = setupImage("/place/garage/garage-top-left-1", gp.getTileSize(), gp.getTileSize());
     }
 
     @Override

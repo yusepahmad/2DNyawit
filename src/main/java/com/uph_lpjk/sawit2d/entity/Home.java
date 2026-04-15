@@ -1,17 +1,17 @@
 package com.uph_lpjk.sawit2d.entity;
 
-import java.awt.Rectangle;
-
 import com.uph_lpjk.sawit2d.controller.GamePanel;
 
-public class Home extends Entity {
-    
-    final private GamePanel gp;
-    final private int tileSize;
-    final private int screenWidth, screenHeight;
+import java.awt.Rectangle;
 
-    final protected int screenX;
-    final protected int screenY;
+public class Home extends Entity {
+
+    private final GamePanel gp;
+    private final int tileSize;
+    private final int screenWidth, screenHeight;
+
+    protected final int screenX;
+    protected final int screenY;
 
     public Home(GamePanel gp) {
         super(gp);
@@ -20,8 +20,8 @@ public class Home extends Entity {
         this.screenWidth = getScreenWidth();
         this.screenHeight = getScreenHeight();
 
-        this.screenX = this.screenWidth/2 - (this.tileSize/2);
-        this.screenY = this.screenHeight/2 - (this.tileSize/2);
+        this.screenX = this.screenWidth / 2 - (this.tileSize / 2);
+        this.screenY = this.screenHeight / 2 - (this.tileSize / 2);
 
         // SOLID AREA
         solidArea = new Rectangle();
@@ -33,11 +33,7 @@ public class Home extends Entity {
         solidArea.height = 32;
     }
 
-    private void setDefaultValues() {
+    private void setDefaultValues() {}
 
-    }
-
-    private void getHomeImage() {
-        
-    }
+    private void getHomeImage() {}
 }

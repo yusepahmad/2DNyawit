@@ -1,12 +1,12 @@
 package com.uph_lpjk.sawit2d.entity;
 
+import com.uph_lpjk.sawit2d.controller.GamePanel;
+
 import java.awt.Color;
 import java.awt.Graphics2D;
 
-import com.uph_lpjk.sawit2d.controller.GamePanel;
-
 public class Particle extends Entity {
-    
+
     GamePanel gp;
     Entity generator;
     Color color;
@@ -14,7 +14,15 @@ public class Particle extends Entity {
     int xd;
     int yd;
 
-    public Particle(GamePanel gp, Entity generator, Color color, int size, int speed, int maxLife, int xd, int yd) {
+    public Particle(
+            GamePanel gp,
+            Entity generator,
+            Color color,
+            int size,
+            int speed,
+            int maxLife,
+            int xd,
+            int yd) {
         super(gp);
         this.gp = gp;
         this.generator = generator;
@@ -35,14 +43,14 @@ public class Particle extends Entity {
     public void update() {
         life--;
 
-        if(life < maxLife / 3) {
+        if (life < maxLife / 3) {
             yd++;
         }
 
         worldX += xd * speed;
         worldY += yd * speed;
 
-        if(life == 0) {
+        if (life == 0) {
             setAlive(false);
         }
     }

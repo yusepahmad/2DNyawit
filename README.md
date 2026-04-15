@@ -69,6 +69,11 @@ Kami sangat terbuka bagi siapa saja yang ingin membantu mengembangkan **Sawit2D*
 - **Audio:** Penambahan efek suara (langkah kaki, suara alam) dan musik latar.
 
 ### 3. Standar Kode
+- Kode mengikuti standar **[Google Java Format](https://github.com/google/google-java-format)**.
+- Jalankan perintah berikut sebelum melakukan commit untuk merapikan kode:
+  ```bash
+  mvn fmt:format
+  ```
 - Pastikan kode mengikuti konvensi penamaan Java (CamelCase).
 - Tambahkan komentar pada metode atau logika yang kompleks.
 - Perbarui unit test jika Anda melakukan perubahan pada logika inti.

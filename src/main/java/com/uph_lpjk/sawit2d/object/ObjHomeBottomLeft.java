@@ -1,18 +1,18 @@
 package com.uph_lpjk.sawit2d.object;
 
-import java.awt.image.BufferedImage;
-
 import com.uph_lpjk.sawit2d.controller.GamePanel;
 import com.uph_lpjk.sawit2d.entity.Entity;
+
+import java.awt.image.BufferedImage;
 
 public class ObjHomeBottomLeft extends Entity {
     public ObjHomeBottomLeft(GamePanel gp) {
         super(gp);
 
         setType(Type.HOME);
-        setName("Home Bottom Left");
+        setName("Rumah");
         setCollision(true);
-        down1 = setup("/place/home/home-bottom-left-3", gp.getTileSize(), gp.getTileSize());
+        down1 = setupImage("/place/home/home-bottom-left-3", gp.getTileSize(), gp.getTileSize());
     }
 
     @Override

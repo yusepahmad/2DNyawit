@@ -1,8 +1,8 @@
 package com.uph_lpjk.sawit2d.controller;
 
 public class EventHandler {
-    final private GamePanel gp;
-    final private EventRect eventRect[][];
+    private final GamePanel gp;
+    private final EventRect eventRect[][];
 
     private int previousEventX, previousEventY;
     private boolean canTouchEvent = true;
@@ -13,8 +13,8 @@ public class EventHandler {
 
         int col = 0;
         int row = 0;
-        
-        while(col < this.gp.getMaxWorldCol() && row < this.gp.getMaxWorldRow()) {
+
+        while (col < this.gp.getMaxWorldCol() && row < this.gp.getMaxWorldRow()) {
             this.eventRect[col][row] = new EventRect();
             this.eventRect[col][row].x = 23;
             this.eventRect[col][row].y = 23;
@@ -24,7 +24,7 @@ public class EventHandler {
             this.eventRect[col][row].eventRectDefaultY = this.eventRect[col][row].y;
 
             col++;
-            if(col == this.gp.getMaxWorldCol()) {
+            if (col == this.gp.getMaxWorldCol()) {
                 col = 0;
                 row++;
             }
@@ -36,7 +36,7 @@ public class EventHandler {
         int xDistance = Math.abs(this.gp.getPlayerWorldX() - this.previousEventX);
         int yDistance = Math.abs(this.gp.getPlayerWorldY() - this.previousEventY);
         int distance = Math.max(xDistance, yDistance);
-        if(distance > this.gp.getTileSize()) {
+        if (distance > this.gp.getTileSize()) {
             canTouchEvent = true;
         }
     }
@@ -49,8 +49,10 @@ public class EventHandler {
         eventRect[col][row].x = col * this.gp.getTileSize() + eventRect[col][row].x;
         eventRect[col][row].y = row * this.gp.getTileSize() + eventRect[col][row].y;
 
-        if(this.gp.getPlayerSolidArea().intersects(eventRect[col][row]) && eventRect[col][row].eventDone == false) {
-            if(this.gp.getPlayerDirection().contentEquals(reqDirection) || reqDirection.contentEquals("any"))  {
+        if (this.gp.getPlayerSolidArea().intersects(eventRect[col][row])
+                && eventRect[col][row].eventDone == false) {
+            if (this.gp.getPlayerDirection().contentEquals(reqDirection)
+                    || reqDirection.contentEquals("any")) {
                 hit = true;
 
                 previousEventX = this.gp.getPlayerWorldX();
