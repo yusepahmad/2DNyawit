@@ -1,16 +1,5 @@
 package com.uph_lpjk.sawit2d.farm;
 
-import com.uph_lpjk.sawit2d.controller.GamePanel;
-import com.uph_lpjk.sawit2d.utility.AssetLoader;
-
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextArea;
-import javax.swing.SwingUtilities;
-import javax.swing.WindowConstants;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dialog;
@@ -20,9 +9,21 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Window;
-import java.awt.image.BufferedImage;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
+
+import com.uph_lpjk.sawit2d.controller.GamePanel;
+import com.uph_lpjk.sawit2d.utility.AssetLoader;
 
 public class FirefighterEventSystem {
     private static final int FIREFIGHTER_COST = 30;
@@ -34,7 +35,7 @@ public class FirefighterEventSystem {
 
         if (option == 0) {
             if (gp.getPlayerGold() < FIREFIGHTER_COST) {
-                return new FirefighterResponse("Tim gajah pemadam batal berangkat. Gold tidak cukup.",
+                return new FirefighterResponse("Tim gajah pemadam batal berangkat. Gold tidak cukup. Nyaawit bisa nangani bencana gabisa, dasar miskin",
                         FarmBurnHandledType.NONE);
             }
             gp.setPlayerGold(-FIREFIGHTER_COST);
@@ -61,14 +62,20 @@ public class FirefighterEventSystem {
         dialog.setResizable(false);
 
         JPanel outer = new JPanel(new BorderLayout());
-        outer.setBackground(new Color(10, 14, 20));
-        outer.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        // outer.setBackground(new Color(10, 14, 20));
+        // outer.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        outer.setBackground(new Color(32, 24, 18));
+        outer.setBorder(BorderFactory.createEmptyBorder(22, 22, 22, 22));
 
         JPanel card = new JPanel(new BorderLayout(0, 16));
-        card.setBackground(new Color(20, 28, 40));
+        // card.setBackground(new Color(20, 28, 40));
+        // card.setBorder(BorderFactory.createCompoundBorder(
+        //         BorderFactory.createLineBorder(new Color(255, 255, 255, 28), 1),
+        //         BorderFactory.createEmptyBorder(20, 20, 20, 20)));
+        card.setBackground(new Color(44, 34, 26));
         card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(255, 255, 255, 28), 1),
-                BorderFactory.createEmptyBorder(20, 20, 20, 20)));
+            BorderFactory.createLineBorder(new Color(214, 166, 82, 180), 2),
+            BorderFactory.createEmptyBorder(18, 18, 18, 18)));
 
         JPanel header = new JPanel(new BorderLayout(14, 0));
         header.setOpaque(false);
@@ -76,17 +83,22 @@ public class FirefighterEventSystem {
         icon.setOpaque(false);
         icon.setPreferredSize(new java.awt.Dimension(52, 52));
         icon.setBackground(new Color(0, 0, 0, 0));
+        // icon.setBorder(BorderFactory.createCompoundBorder(
+        //         BorderFactory.createLineBorder(new Color(255, 255, 255, 28), 1),
+        //         BorderFactory.createEmptyBorder(6, 6, 6, 6)));
         icon.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(255, 255, 255, 28), 1),
-                BorderFactory.createEmptyBorder(6, 6, 6, 6)));
+            BorderFactory.createLineBorder(new Color(214, 166, 82, 160), 2),
+            BorderFactory.createEmptyBorder(6, 6, 6, 6)));
 
         JLabel iconLabel = new JLabel(new javax.swing.ImageIcon(fireIcon));
         iconLabel.setHorizontalAlignment(JLabel.CENTER);
         icon.add(iconLabel, BorderLayout.CENTER);
 
         JLabel title = new JLabel("Tim Gajah Pemadam Siaga");
-        title.setForeground(Color.WHITE);
-        title.setFont(new Font("SansSerif", Font.BOLD, 22));
+        // title.setForeground(Color.WHITE);
+        // title.setFont(new Font("SansSerif", Font.BOLD, 22));
+        title.setForeground(new Color(255, 240, 200));
+        title.setFont(new Font("Monospaced", Font.BOLD, 20));
 
         JTextArea body = new JTextArea(
                 "Asap masih naik dari petak kebun.\n" +
@@ -96,18 +108,24 @@ public class FirefighterEventSystem {
         body.setOpaque(false);
         body.setLineWrap(true);
         body.setWrapStyleWord(true);
-        body.setForeground(new Color(232, 238, 245));
-        body.setFont(new Font("SansSerif", Font.PLAIN, 15));
+        // body.setForeground(new Color(232, 238, 245));
+        // body.setFont(new Font("SansSerif", Font.PLAIN, 15));
+        body.setForeground(new Color(245, 220, 180));
+        body.setFont(new Font("Monospaced", Font.PLAIN, 14));
 
         JLabel note = new JLabel("Biaya bantuan: " + FIREFIGHTER_COST + " gold");
-        note.setForeground(new Color(255, 198, 109));
-        note.setFont(new Font("SansSerif", Font.BOLD, 13));
+        // note.setForeground(new Color(255, 198, 109));
+        // note.setFont(new Font("SansSerif", Font.BOLD, 13));
+        note.setForeground(new Color(226, 186, 116));
+        note.setFont(new Font("Monospaced", Font.BOLD, 12));
 
         JPanel buttonRow = new JPanel(new GridBagLayout());
         buttonRow.setOpaque(false);
 
-        JButton callButton = createButton("Panggil tim gajah", new Color(48, 112, 220), new Color(64, 133, 255));
-        JButton handleButton = createButton("Tangani sendiri", new Color(80, 90, 102), new Color(98, 112, 128));
+        // JButton callButton = createButton("Panggil tim gajah", new Color(48, 112, 220), new Color(64, 133, 255));
+        // JButton handleButton = createButton("Tangani sendiri", new Color(80, 90, 102), new Color(98, 112, 128));
+        JButton callButton = createButton("Panggil tim gajah", new Color(92, 64, 22), new Color(120, 84, 32));
+        JButton handleButton = createButton("Tangani sendiri", new Color(60, 54, 44), new Color(82, 74, 60));
 
         ActionListener callAction = e -> {
             result.set(0);

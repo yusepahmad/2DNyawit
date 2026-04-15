@@ -1,16 +1,15 @@
 package com.uph_lpjk.sawit2d.farm;
 
-import com.uph_lpjk.sawit2d.controller.GamePanel;
-import com.uph_lpjk.sawit2d.entity.Entity;
-import com.uph_lpjk.sawit2d.utility.AssetLoader;
-
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
-import java.util.List;
 import java.util.Random;
+
+import com.uph_lpjk.sawit2d.controller.GamePanel;
+import com.uph_lpjk.sawit2d.entity.Entity;
+import com.uph_lpjk.sawit2d.utility.AssetLoader;
 
 public class FarmSystem {
     private static final double RAIN_PRICE_MULTIPLIER = 0.7;
@@ -19,6 +18,8 @@ public class FarmSystem {
     private static final int MANUAL_FIRE_HANDLE_COST = 25;
     private static final int AUTO_ACTION_INTERVAL_FRAMES = 30;
     private static final int CLOCK_INTERVAL_FRAMES = 120;
+    private static final int FIRE_ANIM_INTERVAL_FRAMES = 12;
+    private static final int LAND_SEIZURE_DAYS = 14;
 
     private final GamePanel gp;
     private final FarmGrid farmGrid;
@@ -38,8 +39,11 @@ public class FarmSystem {
 
     private final BufferedImage soilImage;
     private final BufferedImage plantedImage;
-    private final BufferedImage readyImage;
+    private final BufferedImage sawitStage1Image;
+    private final BufferedImage sawitStage2Image;
+    private final BufferedImage sawitReadyImage;
     private final BufferedImage burnedImage;
+    private final BufferedImage[] fireFrames;
     private final BufferedImage rainImage;
     private final BufferedImage firebreakImage;
     private final BufferedImage laneImage;
@@ -50,6 +54,10 @@ public class FarmSystem {
     private boolean autoHarvestEnabled = false;
     private int autoActionFrameCounter = 0;
     private int clockFrameCounter = 0;
+    private int fireFrameCounter = 0;
+    private int fireFrameIndex = 0;
+    private int daysWithoutPlanting = 0;
+    private boolean plantedToday = false;
 
     public FarmSystem(GamePanel gp) {
         this.gp = gp;
@@ -65,8 +73,15 @@ public class FarmSystem {
         int size = gp.getTileSize();
         this.soilImage = assetLoader.loadImage(size, size, "/tile/earth.png", "assets/tanah rumput.png", "../assets/tanah rumput.png");
         this.plantedImage = assetLoader.loadImage(size, size, "assets/tanah 1.png", "../assets/tanah 1.png", "/tile/grass00.png");
-        this.readyImage = assetLoader.loadImage(size, size, "assets/tanah 2.png", "../assets/tanah 2.png", "/tile/grass01.png");
+        this.sawitStage1Image = assetLoader.loadImage(size, size, "/sawit/sawit-fase-1.png");
+        this.sawitStage2Image = assetLoader.loadImage(size, size, "/sawit/sawit-fase-2.png");
+        this.sawitReadyImage = assetLoader.loadImage(size, size, "/sawit/sawit-panen.png");
         this.burnedImage = assetLoader.loadImage(size, size, "assets/kebakaran.png", "../assets/kebakaran.png", "/tile/wall.png");
+        this.fireFrames = new BufferedImage[] {
+            assetLoader.loadImage(size, size, "/fire/api-1.png"),
+            assetLoader.loadImage(size, size, "/fire/api-3.png"),
+            assetLoader.loadImage(size, size, "/fire/api-5.png")
+        };
         this.rainImage = assetLoader.loadImage(size, size, "assets/after banjir.png", "../assets/after banjir.png", "/tile/water00.png");
         this.firebreakImage = assetLoader.loadImage(size, size, "assets/kebakaran-2.png", "../assets/kebakaran-2.png", "/tile/wall.png");
         this.laneImage = assetLoader.loadImage(size, size, "/tile/road00.png", "assets/air.png", "../assets/air.png");
@@ -95,6 +110,12 @@ public class FarmSystem {
                 resolveDailyTransition(true);
                 gameState.resetMorningHour();
             }
+        }
+
+        fireFrameCounter++;
+        if (fireFrameCounter >= FIRE_ANIM_INTERVAL_FRAMES) {
+            fireFrameCounter = 0;
+            fireFrameIndex = (fireFrameIndex + 1) % fireFrames.length;
         }
 
         autoActionFrameCounter++;
@@ -214,6 +235,8 @@ public class FarmSystem {
         autoHarvestEnabled = false;
         autoActionFrameCounter = 0;
         clockFrameCounter = 0;
+        daysWithoutPlanting = 0;
+        plantedToday = false;
     }
 
     public String performManualHarvestHelp() {
@@ -226,6 +249,7 @@ public class FarmSystem {
         }
         farmGrid.advanceDay();
         advanceUnusedLandDays();
+        updateLandSeizureCounter();
         if (checkLandSeizure()) {
             return true;
         }
@@ -286,7 +310,7 @@ public class FarmSystem {
             return auto ? null : result.getMessage();
         }
         if (gp.getPlayerGold() < result.getCost()) {
-            String message = "Gold tidak cukup untuk bantuan panen.";
+            String message = "Gold tidak cukup untuk bantuan panen, udah deh kerja sendiri gausah nyuruh orang.";
             if (!auto) {
                 gp.addUIMessage(message);
             }
@@ -338,6 +362,7 @@ public class FarmSystem {
                     if (farmGrid.plantTile(row, col)) {
                         gp.setPlayerGold(-PLANT_COST);
                         planted++;
+                        plantedToday = true;
                         if (description.length() > 0) {
                             description.append(", ");
                         }
@@ -383,6 +408,10 @@ public class FarmSystem {
         return gameState.getReputation();
     }
 
+    public int getDaysWithoutPlanting() {
+        return daysWithoutPlanting;
+    }
+
     public boolean isRaining() {
         return gameState.isRaining();
     }
@@ -410,18 +439,38 @@ public class FarmSystem {
                 }
 
                 BufferedImage image = soilImage;
+                double scale = 1.0;
+                boolean scaledDraw = false;
                 if (isLaneCell(col, row)) {
                     image = laneImage;
                 } else if (tile.isBurned()) {
-                    image = tile.isBurnedHandled() ? rainImage : burnedImage;
+                    image = tile.isBurnedHandled() ? rainImage : fireFrames[fireFrameIndex];
                 } else if (tile.getType() == FarmTileType.SAWIT) {
-                    image = tile.isReadyToHarvest() ? readyImage : plantedImage;
+                    int stage = tile.getGrowthStage();
+                    if (stage == 1) {
+                        image = sawitStage1Image;
+                        scale = 0.65;
+                    } else if (stage == 2) {
+                        image = sawitStage2Image;
+                        scale = 0.82;
+                    } else {
+                        image = sawitReadyImage;
+                        scale = 1.0;
+                    }
+                    scaledDraw = true;
                 } else if (tile.getType() == FarmTileType.FIREBREAK) {
                     image = firebreakImage;
                 } else if (tile.getType() == FarmTileType.VEGETATION) {
                     image = plantedImage;
                 }
-                g2.drawImage(image, screenX, screenY, null);
+                if (scaledDraw) {
+                    int drawSize = (int) Math.round(tileSize * scale);
+                    int drawX = screenX + (tileSize - drawSize) / 2;
+                    int drawY = screenY + (tileSize - drawSize) / 2;
+                    g2.drawImage(image, drawX, drawY, drawSize, drawSize, null);
+                } else {
+                    g2.drawImage(image, screenX, screenY, null);
+                }
 
                 g2.setColor(getTileOverlayColor(tile, col, row));
                 g2.drawRect(screenX, screenY, tileSize, tileSize);
@@ -486,7 +535,7 @@ public class FarmSystem {
 
         if (tile.isBurned() && !tile.isBurnedHandled()) {
             if (gp.getPlayerGold() < MANUAL_FIRE_HANDLE_COST) {
-                gp.addUIMessage("Gold tidak cukup untuk tangani kebakaran.");
+                gp.addUIMessage("Gold tidak cukup untuk tangani kebakaran dasar miskin.");
                 return;
             }
             gp.setPlayerGold(-MANUAL_FIRE_HANDLE_COST);
@@ -498,7 +547,7 @@ public class FarmSystem {
 
         if (tile.getType() == FarmTileType.EMPTY) {
             if (gp.getPlayerGold() < PLANT_COST) {
-                gp.addUIMessage("Gold tidak cukup untuk menanam sawit.");
+                gp.addUIMessage("Gold tidak cukup untuk menanam sawit, bayar dulu utang baru nyawit.");
                 return;
             }
             if (farmGrid.plantTile(tilePos.y, tilePos.x)) {
@@ -506,6 +555,7 @@ public class FarmSystem {
                 gp.playSoundEffect(2);
                 gp.addUIMessage("Bibit sawit ditanam di petak " + formatPlot(tilePos) + ". Gold -" + PLANT_COST + ".");
                 gameState.setLastNotification("Bibit sawit mulai tumbuh.");
+                plantedToday = true;
                 return;
             }
         }
@@ -539,7 +589,7 @@ public class FarmSystem {
 
         if (tile.getType() == FarmTileType.EMPTY) {
             if (gp.getPlayerGold() < FIREBREAK_COST) {
-                gp.addUIMessage("Gold tidak cukup untuk pasang firebreak.");
+                gp.addUIMessage("Gold tidak cukup untuk pasang firebreak, makan-nya nyawit yang bener dek.");
                 return;
             }
             gp.setPlayerGold(-FIREBREAK_COST);
@@ -579,7 +629,8 @@ public class FarmSystem {
             return new Color(125, 94, 55, 100);
         }
         if (tile.isBurned()) {
-            return tile.isBurnedHandled() ? new Color(90, 180, 220, 200) : new Color(160, 40, 40, 210);
+            // return tile.isBurnedHandled() ? new Color(90, 180, 220, 200) : new Color(160, 40, 40, 210);
+            return tile.isBurnedHandled() ? new Color(90, 150, 130, 200) : new Color(190, 90, 40, 220);
         }
         if (tile.getType() == FarmTileType.FIREBREAK) {
             return new Color(120, 120, 120, 210);
@@ -623,20 +674,21 @@ public class FarmSystem {
     }
 
     private boolean checkLandSeizure() {
-        for (int row = 0; row < farmGrid.getRows(); row++) {
-            for (int col = 0; col < farmGrid.getCols(); col++) {
-                if (!isPlantablePlot(col, row)) {
-                    continue;
-                }
-                FarmTile tile = farmGrid.getTile(row, col);
-                if (tile != null && tile.isLandExpired()) {
-                    String reason = "Tanah Anda disita negara karena dibiarkan kosong selama 2 minggu. Game over.";
-                    gp.setGameOver(reason);
-                    return true;
-                }
-            }
+        if (daysWithoutPlanting < LAND_SEIZURE_DAYS) {
+            return false;
         }
-        return false;
+        String reason = "Tanah Anda disita negara karena dibiarkan kosong selama 2 minggu. Game over.";
+        gp.setGameOver(reason);
+        return true;
+    }
+
+    private void updateLandSeizureCounter() {
+        if (plantedToday) {
+            daysWithoutPlanting = 0;
+        } else {
+            daysWithoutPlanting++;
+        }
+        plantedToday = false;
     }
 
     private String buildFireAftermathMessage(FarmBurnHandledType handledType) {

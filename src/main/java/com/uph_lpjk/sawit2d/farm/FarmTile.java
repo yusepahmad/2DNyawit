@@ -119,6 +119,7 @@ public class FarmTile {
         this.type = FarmTileType.EMPTY;
         this.remainingGrowDays = 0;
         this.readyToHarvest = false;
+        this.burned = false;
         this.handledType = FarmBurnHandledType.NONE;
         this.unusedDays = 0;
     }

@@ -289,13 +289,16 @@ public class UserInterface {
         this.g2.drawString(title, x, y);
 
         this.g2.setFont(this.g2.getFont().deriveFont(Font.BOLD, 26F));
+        String reason = this.gp.getFarmState().getLastNotification();
         String subtitle = "Tanah Anda Disita Negara";
+        if (reason != null && reason.toLowerCase().contains("gold habis")) {
+            subtitle = "Gold Anda Habis Dasar Miskin Gausah so soan nyawit deh lu";
+        }
         int subtitleX = getXforCenteredText(subtitle);
         this.g2.setColor(new Color(255, 210, 120));
         this.g2.drawString(subtitle, subtitleX, y + 42);
 
         this.g2.setFont(this.g2.getFont().deriveFont(Font.PLAIN, 22F));
-        String reason = this.gp.getFarmState().getLastNotification();
         this.g2.setColor(Color.white);
         drawWrappedText(reason, this.gp.getScreenWidth() / 2, y + 86, this.gp.getScreenWidth() - 220, 28, true);
 
@@ -330,38 +333,40 @@ public class UserInterface {
             alpha = Math.max(0.0f, (this.activeBanner.duration - this.activeBanner.age) / 24.0f);
         }
 
-        Color bg;
-        Color accent;
-        switch (this.activeBanner.tone) {
-            case WEATHER:
-                bg = new Color(28, 66, 110);
-                accent = new Color(96, 185, 255);
-                break;
-            case DANGER:
-                bg = new Color(95, 28, 28);
-                accent = new Color(255, 90, 90);
-                break;
-            case ECONOMY:
-                bg = new Color(42, 68, 34);
-                accent = new Color(138, 214, 91);
-                break;
-            case SUCCESS:
-                bg = new Color(32, 78, 52);
-                accent = new Color(88, 230, 144);
-                break;
-            case WARNING:
-                bg = new Color(92, 64, 22);
-                accent = new Color(255, 193, 71);
-                break;
-            case GAME_OVER:
-                bg = new Color(80, 18, 18);
-                accent = new Color(255, 115, 115);
-                break;
-            default:
-                bg = new Color(35, 40, 55);
-                accent = new Color(180, 180, 180);
-                break;
-        }
+        // Color bg;
+        // Color accent;
+        // switch (this.activeBanner.tone) {
+        //     case WEATHER:
+        //         bg = new Color(28, 66, 110);
+        //         accent = new Color(96, 185, 255);
+        //         break;
+        //     case DANGER:
+        //         bg = new Color(95, 28, 28);
+        //         accent = new Color(255, 90, 90);
+        //         break;
+        //     case ECONOMY:
+        //         bg = new Color(42, 68, 34);
+        //         accent = new Color(138, 214, 91);
+        //         break;
+        //     case SUCCESS:
+        //         bg = new Color(32, 78, 52);
+        //         accent = new Color(88, 230, 144);
+        //         break;
+        //     case WARNING:
+        //         bg = new Color(92, 64, 22);
+        //         accent = new Color(255, 193, 71);
+        //         break;
+        //     case GAME_OVER:
+        //         bg = new Color(80, 18, 18);
+        //         accent = new Color(255, 115, 115);
+        //         break;
+        //     default:
+        //         bg = new Color(35, 40, 55);
+        //         accent = new Color(180, 180, 180);
+        //         break;
+        // }
+        Color bg = new Color(44, 34, 26);
+        Color accent = new Color(214, 166, 82);
 
         java.awt.Composite oldComposite = this.g2.getComposite();
         this.g2.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, alpha));
@@ -371,23 +376,29 @@ public class UserInterface {
         this.g2.setColor(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 220));
         this.g2.fillRoundRect(bannerX, bannerY, 12, bannerH, 22, 22);
 
-        this.g2.setColor(new Color(255, 255, 255, 75));
-        this.g2.drawRoundRect(bannerX, bannerY, bannerW, bannerH, 22, 22);
+        // this.g2.setColor(new Color(255, 255, 255, 75));
+        // this.g2.drawRoundRect(bannerX, bannerY, bannerW, bannerH, 22, 22);
+        this.g2.setColor(new Color(252, 220, 160, 120));
+        this.g2.drawRoundRect(bannerX, bannerY, bannerW, bannerH, 18, 18);
 
         int iconX = bannerX + 24;
         int iconY = bannerY + 14;
-        this.g2.setColor(new Color(255, 255, 255, 34));
-        this.g2.fillRoundRect(iconX - 6, iconY - 4, 36, 36, 12, 12);
+        // this.g2.setColor(new Color(255, 255, 255, 34));
+        // this.g2.fillRoundRect(iconX - 6, iconY - 4, 36, 36, 12, 12);
+        this.g2.setColor(new Color(255, 230, 170, 30));
+        this.g2.fillRoundRect(iconX - 6, iconY - 4, 36, 36, 10, 10);
         if (this.activeBanner.icon != null) {
             this.g2.drawImage(this.activeBanner.icon, iconX, iconY, 24, 24, null);
         }
 
         this.g2.setFont(this.g2.getFont().deriveFont(Font.BOLD, 21F));
-        this.g2.setColor(Color.white);
+        // this.g2.setColor(Color.white);
+        this.g2.setColor(new Color(255, 240, 200));
         this.g2.drawString(this.activeBanner.title, bannerX + 64, bannerY + 28);
 
         this.g2.setFont(this.g2.getFont().deriveFont(Font.PLAIN, 15F));
-        this.g2.setColor(new Color(245, 245, 245));
+        // this.g2.setColor(new Color(245, 245, 245));
+        this.g2.setColor(new Color(245, 220, 180));
         int detailY = bannerY + 49;
         for (String line : detailLines) {
             this.g2.drawString(line, bannerX + 64, detailY);
@@ -405,15 +416,20 @@ public class UserInterface {
         int boxX = this.gp.getTileSize() / 2;
         int boxY = this.gp.getTileSize() / 2;
         int boxW = this.gp.getTileSize() * 6;
-        int boxH = this.gp.getTileSize() * 6;
+        int boxH = this.gp.getTileSize() * 7;
 
-        this.g2.setColor(new Color(0, 0, 0, 140));
-        this.g2.fillRoundRect(boxX, boxY, boxW, boxH, 16, 16);
-        this.g2.setColor(new Color(255, 255, 255, 180));
-        this.g2.drawRoundRect(boxX, boxY, boxW, boxH, 16, 16);
+        // this.g2.setColor(new Color(0, 0, 0, 140));
+        // this.g2.fillRoundRect(boxX, boxY, boxW, boxH, 16, 16);
+        // this.g2.setColor(new Color(255, 255, 255, 180));
+        // this.g2.drawRoundRect(boxX, boxY, boxW, boxH, 16, 16);
+        this.g2.setColor(new Color(42, 32, 24, 200));
+        this.g2.fillRoundRect(boxX, boxY, boxW, boxH, 12, 12);
+        this.g2.setColor(new Color(238, 204, 126, 220));
+        this.g2.drawRoundRect(boxX, boxY, boxW, boxH, 12, 12);
 
         this.g2.setFont(this.g2.getFont().deriveFont(Font.BOLD, 17F));
-        this.g2.setColor(Color.white);
+        // this.g2.setColor(Color.white);
+        this.g2.setColor(new Color(250, 230, 190));
 
         int textX = boxX + 14;
         int textY = boxY + 24;
@@ -423,8 +439,9 @@ public class UserInterface {
         this.g2.drawString("Inventory: " + this.gp.getFarmState().getInventory(), textX, textY + lineHeight * 2);
         this.g2.drawString("Risk: " + this.gp.getFarmState().getRiskScore(), textX, textY + lineHeight * 3);
         this.g2.drawString("Rep: " + this.gp.getFarmState().getReputation(), textX, textY + lineHeight * 4);
-        this.g2.drawString("Auto Tanam: " + (this.gp.getFarmSystem().isAutoPlantEnabled() ? "ON" : "OFF"), textX, textY + lineHeight * 5);
-        this.g2.drawString("Auto Panen: " + (this.gp.getFarmSystem().isAutoHarvestEnabled() ? "ON" : "OFF"), textX, textY + lineHeight * 6);
+        this.g2.drawString("Tanpa tanam: " + this.gp.getFarmSystem().getDaysWithoutPlanting() + " hari", textX, textY + lineHeight * 5);
+        this.g2.drawString("Auto Tanam: " + (this.gp.getFarmSystem().isAutoPlantEnabled() ? "ON" : "OFF"), textX, textY + lineHeight * 6);
+        this.g2.drawString("Auto Panen: " + (this.gp.getFarmSystem().isAutoHarvestEnabled() ? "ON" : "OFF"), textX, textY + lineHeight * 7);
     }
 
     private void drawControlHint() {
