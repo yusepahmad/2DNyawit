@@ -68,6 +68,7 @@ public class GamePanel extends JPanel implements Runnable {
     private InteractiveTile iTile[] = new InteractiveTile[900];
     private final ArrayList<Entity> entityList = new ArrayList<>();
     private final ArrayList<Entity> particleList = new ArrayList<>();
+    public final ArrayList<Entity> npcList = new ArrayList<>();
 
     private final CollisionChecker cChecker = new CollisionChecker(this);
     private final TileManager tileM = new TileManager(this);
@@ -79,7 +80,8 @@ public class GamePanel extends JPanel implements Runnable {
         PAUSE,
         CHARACTER,
         GAME_OVER,
-        EVENT
+        EVENT,
+        MARKET
     }
 
     private State gameState;
@@ -202,14 +204,6 @@ public class GamePanel extends JPanel implements Runnable {
         return this.ui.getSlotRows();
     }
 
-    public int getUIInventoryTab() {
-        return this.ui.getInventoryTab();
-    }
-
-    public void setUIInventoryTab(int tab) {
-        this.ui.setInventoryTab(tab);
-    }
-
     public Entity getUISelectedItem() {
         return this.ui.getSelectedItem();
     }
@@ -317,6 +311,7 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     private void handleFarmMouseInput(MouseEvent e) {
+        this.requestFocusInWindow();
         if (gameState == null) return;
 
         if (gameState == State.EVENT) {
@@ -477,6 +472,10 @@ public class GamePanel extends JPanel implements Runnable {
         return this.cChecker.checkEntity(entity, target);
     }
 
+    public int getCheckAttack(Entity entity, Entity[] target, Rectangle attackBox) {
+        return this.cChecker.checkAttack(entity, target, attackBox);
+    }
+
     public boolean getCheckPlayer(Entity entity) {
         return this.cChecker.checkPlayer(entity);
     }
@@ -590,6 +589,17 @@ public class GamePanel extends JPanel implements Runnable {
 
             this.farmSystem.update();
 
+            // NPC
+            for (int i = 0; i < this.npcList.size(); i++) {
+                if (this.npcList.get(i) != null) {
+                    if (this.npcList.get(i).getAlive() == true) {
+                        this.npcList.get(i).update();
+                    } else {
+                        this.npcList.remove(i--);
+                    }
+                }
+            }
+
             if (this.gameState == GamePanel.State.GAME_OVER) return;
 
             for (int i = 0; i < this.iTile.length; i++) {
@@ -627,15 +637,16 @@ public class GamePanel extends JPanel implements Runnable {
         // MAP OBJECTS
         tileM.drawObjectLayer(g2);
 
-        // INTERACTIVE TILE
-        for (int i = 0; i < this.iTile.length; i++) {
-            if (this.iTile[i] != null) this.iTile[i].draw(g2);
-        }
-
         // ADD ENTITY TO THE LIST
         this.entityList.add(this.player);
         for (int i = 0; i < this.obj.length; i++) {
             if (this.obj[i] != null) this.entityList.add(this.obj[i]);
+        }
+        for (int i = 0; i < this.iTile.length; i++) {
+            if (this.iTile[i] != null) this.entityList.add(this.iTile[i]);
+        }
+        for (int i = 0; i < this.npcList.size(); i++) {
+            if (this.npcList.get(i) != null) this.entityList.add(this.npcList.get(i));
         }
         for (int i = 0; i < this.particleList.size(); i++) {
             if (this.particleList.get(i) != null) this.entityList.add(this.particleList.get(i));
@@ -655,6 +666,12 @@ public class GamePanel extends JPanel implements Runnable {
         for (int i = 0; i < this.entityList.size(); i++) {
             this.entityList.get(i).draw(g2);
         }
+
+        // RAIN ATMOSPHERE (over the entire world)
+        this.farmSystem.drawDarknessOverlay(g2);
+
+        // RAIN PARTICLES (on top of the darkened world)
+        this.farmSystem.drawRainParticles(g2);
 
         this.ui.draw(g2);
 

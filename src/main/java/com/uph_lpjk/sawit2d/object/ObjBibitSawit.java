@@ -8,6 +8,7 @@ public class ObjBibitSawit extends Entity {
         super(gp);
         setType(Type.MATERIAL);
         setName("Bibit Sawit");
+        stackable = true;
         down1 = setupImage("/sawit/sawit-fase-1", gp.getTileSize(), gp.getTileSize());
         setDescription("[" + getName() + "]\nBibit kelapa sawit yang siap ditanam.");
     }

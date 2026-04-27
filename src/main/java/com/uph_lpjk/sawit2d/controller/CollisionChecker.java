@@ -177,6 +177,26 @@ public class CollisionChecker {
         return index;
     }
 
+    public int checkAttack(Entity entity, Entity[] target, java.awt.Rectangle attackBox) {
+        int index = 999;
+        for (int i = 0; i < target.length; i++) {
+            if (target[i] != null) {
+                // Get target's solid area in world coordinates
+                java.awt.Rectangle targetSolidArea = new java.awt.Rectangle();
+                targetSolidArea.x = target[i].getWorldX() + target[i].getSolidAreaX();
+                targetSolidArea.y = target[i].getWorldY() + target[i].getSolidAreaY();
+                targetSolidArea.width = target[i].getSolidAreaWidth();
+                targetSolidArea.height = target[i].getSolidAreaHeight();
+
+                if (attackBox.intersects(targetSolidArea)) {
+                    index = i;
+                    break;
+                }
+            }
+        }
+        return index;
+    }
+
     // Branch A Integration: Added checkPlayer for NPC/Object interactions
     public boolean checkPlayer(Entity entity) {
         boolean contactPlayer = false;

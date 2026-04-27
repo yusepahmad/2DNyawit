@@ -11,7 +11,7 @@ public class ObjAxe extends Entity {
         super(gp);
         this.gp = gp;
 
-        setType(Type.EQUIPMENT);
+        setType(Type.AXE);
         setName("Kapak Penebang");
         down1 = setupImage("/objects/weapons/axe", gp.getTileSize(), gp.getTileSize());
         setAttackValue(2);

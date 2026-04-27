@@ -18,6 +18,14 @@ public class DryTree extends InteractiveTile {
                         "/tiles_interactive/drytree", this.gp.getTileSize(), this.gp.getTileSize());
         destructible = true;
         setLife(3);
+
+        // Define a smaller, more realistic solid area (centered bottom)
+        this.solidArea.x = 8;
+        this.solidArea.y = 16;
+        this.solidArea.width = 32;
+        this.solidArea.height = 32;
+        this.solidAreaDefaultX = this.solidArea.x;
+        this.solidAreaDefaultY = this.solidArea.y;
     }
 
     @Override
@@ -27,6 +35,13 @@ public class DryTree extends InteractiveTile {
             isCorrectItem = true;
         }
         return isCorrectItem;
+    }
+
+    @Override
+    public InteractiveTile getDestroyForm() {
+        InteractiveTile tile =
+                new Trunk(gp, getWorldX() / gp.getTileSize(), getWorldY() / gp.getTileSize());
+        return tile;
     }
 
     @Override

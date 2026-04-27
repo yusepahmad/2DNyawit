@@ -2,8 +2,6 @@ package com.uph_lpjk.sawit2d.controller;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 
@@ -32,27 +30,6 @@ public class UIElement {
         g2.setColor(BORDER_COLOR);
         g2.setStroke(new BasicStroke(5));
         g2.drawRoundRect(x + 5, y + 5, width - 10, height - 10, 25, 25);
-    }
-
-    public void tabItem(String title, int x, int y, int width, int height, boolean active) {
-        // TAB BACKGROUND
-        g2.setColor(active ? BG_COLOR : INACTIVE_COLOR);
-        int arc = 20;
-        g2.fillRoundRect(x, y, width, height, arc, arc);
-        g2.fillRect(x, y + height / 2, width, height / 2);
-
-        // TAB BORDER - Synchronized with beginWindow (Stroke 5)
-        g2.setColor(active ? ACTIVE_COLOR : BORDER_COLOR);
-        g2.setStroke(new BasicStroke(5));
-        g2.drawRoundRect(x + 2, y, width - 4, height, arc, arc);
-
-        // TAB TEXT
-        g2.setFont(g2.getFont().deriveFont(Font.BOLD, 16f));
-        g2.setColor(active ? ACTIVE_COLOR : Color.gray);
-        FontMetrics fm = g2.getFontMetrics();
-        int textX = x + (width - fm.stringWidth(title)) / 2;
-        int textY = y + ((height - fm.getHeight()) / 2) + fm.getAscent();
-        g2.drawString(title, textX, textY);
     }
 
     public void inventorySlot(

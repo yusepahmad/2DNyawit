@@ -98,32 +98,26 @@ public class TileManager {
         setup(44, "tile", "table01", true);
 
         // FARM SPECIFIC TILES
-        setupCustom(45, false, "/tile/earth.png", "/tile/earth.png", "/tile/grass00.png");
-        setupCustom(46, false, "/sawit/sawit-fase-1.png");
-        setupCustom(47, false, "/sawit/sawit-fase-2.png");
-        setupCustom(48, false, "/sawit/sawit-panen.png");
-        setupCustom(49, false, "/tile/kebakaran.png", "/tile/kebakaran.png", "/tile/wall.png");
-        setupCustom(50, false, "/fire/api-1.png");
-        setupCustom(51, false, "/fire/api-3.png");
-        setupCustom(52, false, "/fire/api-5.png");
-        setupCustom(
-                53, false, "/tile/after banjir.png", "/tile/after-banjir.png", "/tile/water00.png");
-        setupCustom(54, false, "/tile/kebakaran-2.png", "/tile/kebakaran-2.png", "/tile/wall.png");
+        setup(45, "/tile/earth", false);
+        setup(46, "/sawit/sawit-fase-1", false);
+        setup(47, "/sawit/sawit-fase-2", false);
+        setup(48, "/sawit/sawit-panen", false);
+        setup(49, "/tile/kebakaran", false);
+        setup(50, "/fire/api-1", false);
+        setup(51, "/fire/api-3", false);
+        setup(52, "/fire/api-5", false);
+        setup(53, "/tile/after-banjir", false);
+        setup(54, "/tile/kebakaran-2", false);
     }
 
     private void setup(int index, String folder, String imageName, boolean collision) {
-        setupCustom(
-                index,
-                collision,
-                "/" + folder + "/" + imageName + ".png",
-                folder + "/" + imageName + ".png",
-                "../" + folder + "/" + imageName + ".png");
+        setup(index, "/" + folder + "/" + imageName, collision);
     }
 
-    private void setupCustom(int index, boolean collision, String... candidates) {
+    private void setup(int index, String imagePath, boolean collision) {
         this.tile[index] = new Tile();
         this.tile[index].image =
-                this.assetLoader.loadImage(this.tileSize, this.tileSize, candidates);
+                this.assetLoader.loadImage(this.tileSize, this.tileSize, imagePath);
         this.tile[index].collision = collision;
     }
 

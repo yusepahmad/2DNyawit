@@ -76,9 +76,36 @@ public class UserInterface {
     private final List<Rectangle> eventButtonRects = new ArrayList<>();
 
     private int commandNum = 0;
+    private int subState = 0;
     private int slotCol = 0;
     private int slotRow = 0;
-    private int inventoryTab = 0; // 0: Equipment, 1: Materials
+
+    private int buyQty = 1;
+    private int sellQty = 1;
+
+    public int getBuyQty() {
+        return buyQty;
+    }
+
+    public void setBuyQty(int buyQty) {
+        this.buyQty = Math.max(1, buyQty);
+    }
+
+    public int getSellQty() {
+        return sellQty;
+    }
+
+    public void setSellQty(int sellQty) {
+        this.sellQty = Math.max(1, sellQty);
+    }
+
+    public int getSubState() {
+        return subState;
+    }
+
+    public void setSubState(int subState) {
+        this.subState = subState;
+    }
 
     private int frameX = 9;
     private int frameY = 8;
@@ -101,27 +128,14 @@ public class UserInterface {
         Entity objGold = new ObjGold(gp);
         this.gold = objGold.getImage();
 
-        this.infoIcon =
-                assetLoader.loadImage(28, 28, "/tile/weather-sunny.png", "/tile/grass00.png");
-        this.successIcon =
-                assetLoader.loadImage(
-                        28, 28, "/tile/earth.png", "/tile/earth.png", "/tile/grass01.png");
-        this.warningIcon =
-                assetLoader.loadImage(
-                        28, 28, "/tile/banjir.png", "/tile/banjir.png", "/tile/water00.png");
-        this.dangerIcon = assetLoader.loadImage(28, 28, "/tile/kebakaran.png", "/tile/wall.png");
-        this.weatherIcon =
-                assetLoader.loadImage(28, 28, "/tile/weather-cloudy.png", "/tile/water01.png");
-        this.economyIcon = assetLoader.loadImage(28, 28, "/objects/gold/goldie.png");
-        this.gameOverIcon =
-                assetLoader.loadImage(
-                        28, 28, "/tile/after-kebakaran-2.png", "/tile/after-kebakaran.png");
-        this.firefighterIcon =
-                assetLoader.loadImage(
-                        48,
-                        48,
-                        "/player/elephant/elephant-front.png",
-                        "/player/elephant/elephant-front.png");
+        this.infoIcon = assetLoader.loadImage(28, 28, "/tile/weather-sunny");
+        this.successIcon = assetLoader.loadImage(28, 28, "/tile/earth");
+        this.warningIcon = assetLoader.loadImage(28, 28, "/tile/after-banjir");
+        this.dangerIcon = assetLoader.loadImage(28, 28, "/tile/kebakaran");
+        this.weatherIcon = assetLoader.loadImage(28, 28, "/tile/weather-cloudy");
+        this.economyIcon = assetLoader.loadImage(28, 28, "/objects/gold/goldie");
+        this.gameOverIcon = assetLoader.loadImage(28, 28, "/tile/after-kebakaran-2");
+        this.firefighterIcon = assetLoader.loadImage(48, 48, "/player/elephant/elephant-front");
     }
 
     public void setupEvent(
@@ -162,36 +176,10 @@ public class UserInterface {
         this.slotCol = slotCol;
     }
 
-    public int getInventoryTab() {
-        return inventoryTab;
-    }
-
-    public void setInventoryTab(int inventoryTab) {
-        this.inventoryTab = inventoryTab;
-        // Reset cursor when switching tabs
-        this.slotCol = 0;
-        this.slotRow = 0;
-    }
-
     public Entity getSelectedItem() {
-        ArrayList<Entity> filteredItems = new ArrayList<>();
-        for (int i = 0; i < this.gp.getPlayerInventorySize(); i++) {
-            Entity item = this.gp.getPlayerInventory(i);
-            if (inventoryTab == 0
-                    && (item.getType() == Entity.Type.EQUIPMENT
-                            || item.getType() == Entity.Type.AXE
-                            || item.getType() == Entity.Type.SWORD)) {
-                filteredItems.add(item);
-            } else if (inventoryTab == 1
-                    && (item.getType() == Entity.Type.MATERIAL
-                            || item.getType() == Entity.Type.CONSUMABLE)) {
-                filteredItems.add(item);
-            }
-        }
-
         int itemIndex = getItemIndexOnSlot();
-        if (itemIndex < filteredItems.size()) {
-            return filteredItems.get(itemIndex);
+        if (itemIndex < this.gp.getPlayerInventorySize()) {
+            return this.gp.getPlayerInventory(itemIndex);
         }
         return null;
     }
@@ -305,7 +293,137 @@ public class UserInterface {
             case EVENT:
                 drawEventScreen();
                 break;
+            case MARKET:
+                drawMarketScreen();
+                break;
         }
+    }
+
+    private void drawMarketScreen() {
+        if (subState == 0) {
+            marketMain();
+        } else if (subState == 1) {
+            marketBuyQty();
+        } else if (subState == 2) {
+            marketSellQty();
+        }
+    }
+
+    private void marketMain() {
+        g2.setColor(new Color(0, 0, 0, 150));
+        g2.fillRect(0, 0, gp.getScreenWidth(), gp.getScreenHeight());
+
+        int width = gp.getTileSize() * 10;
+        int height = gp.getTileSize() * 8;
+        int x = (gp.getScreenWidth() - width) / 2;
+        int y = (gp.getScreenHeight() - height) / 2;
+
+        drawSubWindow(x, y, width, height);
+
+        g2.setFont(g2.getFont().deriveFont(Font.BOLD, 48F));
+        String text = "PASAR SAWIT";
+        int tx = getXforCenteredText(text);
+        int ty = y + gp.getTileSize() * 2;
+        g2.setColor(new Color(255, 240, 200));
+        g2.drawString(text, tx, ty);
+
+        g2.setFont(g2.getFont().deriveFont(Font.BOLD, 24F));
+        g2.setColor(Color.white);
+        text = "Gold Anda: $" + gp.getPlayerGold();
+        tx = getXforCenteredText(text);
+        ty += gp.getTileSize();
+        g2.drawString(text, tx, ty);
+
+        g2.setFont(g2.getFont().deriveFont(Font.BOLD, 28F));
+        String[] options = {"Beli Bibit Sawit ($30)", "Jual Hasil Panen ($120)", "Keluar"};
+        ty += gp.getTileSize();
+        for (int i = 0; i < options.length; i++) {
+            text = options[i];
+            tx = getXforCenteredText(text);
+            ty += (int) (gp.getTileSize() * 1.1);
+            g2.drawString(text, tx, ty);
+            if (commandNum == i) {
+                g2.drawString(">", tx - 30, ty);
+            }
+        }
+    }
+
+    private void marketBuyQty() {
+        g2.setColor(new Color(0, 0, 0, 150));
+        g2.fillRect(0, 0, gp.getScreenWidth(), gp.getScreenHeight());
+
+        int width = gp.getTileSize() * 8;
+        int height = gp.getTileSize() * 6;
+        int x = (gp.getScreenWidth() - width) / 2;
+        int y = (gp.getScreenHeight() - height) / 2;
+
+        drawSubWindow(x, y, width, height);
+
+        g2.setFont(g2.getFont().deriveFont(Font.BOLD, 36F));
+        String text = "Beli Bibit";
+        int tx = getXforCenteredText(text);
+        int ty = y + (int) (gp.getTileSize() * 1.5);
+        g2.setColor(new Color(255, 240, 200));
+        g2.drawString(text, tx, ty);
+
+        g2.setFont(g2.getFont().deriveFont(Font.BOLD, 28F));
+        g2.setColor(Color.white);
+
+        text = "Jumlah: < " + buyQty + " >";
+        tx = getXforCenteredText(text);
+        ty += (int) (gp.getTileSize() * 1.5);
+        g2.drawString(text, tx, ty);
+
+        int total = buyQty * 30;
+        text = "Total: $" + total;
+        tx = getXforCenteredText(text);
+        ty += gp.getTileSize();
+        g2.drawString(text, tx, ty);
+
+        g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 18F));
+        text = "[ENTER] Konfirmasi  [ESC] Batal";
+        tx = getXforCenteredText(text);
+        ty += (int) (gp.getTileSize() * 1.2);
+        g2.drawString(text, tx, ty);
+    }
+
+    private void marketSellQty() {
+        g2.setColor(new Color(0, 0, 0, 150));
+        g2.fillRect(0, 0, gp.getScreenWidth(), gp.getScreenHeight());
+
+        int width = gp.getTileSize() * 8;
+        int height = gp.getTileSize() * 6;
+        int x = (gp.getScreenWidth() - width) / 2;
+        int y = (gp.getScreenHeight() - height) / 2;
+
+        drawSubWindow(x, y, width, height);
+
+        g2.setFont(g2.getFont().deriveFont(Font.BOLD, 36F));
+        String text = "Jual Hasil Panen";
+        int tx = getXforCenteredText(text);
+        int ty = y + (int) (gp.getTileSize() * 1.5);
+        g2.setColor(new Color(255, 240, 200));
+        g2.drawString(text, tx, ty);
+
+        g2.setFont(g2.getFont().deriveFont(Font.BOLD, 28F));
+        g2.setColor(Color.white);
+
+        int maxSell = gp.getFarmState().getInventory();
+        text = "Tersedia: " + maxSell + " TBS";
+        tx = getXforCenteredText(text);
+        ty += gp.getTileSize();
+        g2.drawString(text, tx, ty);
+
+        text = "Jumlah: < " + sellQty + " >";
+        tx = getXforCenteredText(text);
+        ty += (int) (gp.getTileSize() * 1.5);
+        g2.drawString(text, tx, ty);
+
+        g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 18F));
+        text = "[ENTER] Konfirmasi  [F] Jual Semua  [ESC] Batal";
+        tx = getXforCenteredText(text);
+        ty += (int) (gp.getTileSize() * 1.2);
+        g2.drawString(text, tx, ty);
     }
 
     private void drawEventScreen() {
@@ -442,16 +560,6 @@ public class UserInterface {
         int frameWidth = (this.gp.getTileSize() * this.frameX) + 1;
         int frameHeight = (this.gp.getTileSize() * this.frameY) + 1;
 
-        // TABS - 50% Width Logic
-        int tabWidth = frameWidth / 2;
-        int tabHeight = 35;
-        int tab1X = windowX;
-        int tab2X = windowX + tabWidth;
-        int tabY = windowY - tabHeight;
-
-        ui.tabItem("Perlengkapan", tab1X, tabY, tabWidth, tabHeight, inventoryTab == 0);
-        ui.tabItem("Bahan Baku", tab2X, tabY, tabWidth, tabHeight, inventoryTab == 1);
-
         ui.beginWindow(windowX, windowY, frameWidth, frameHeight);
 
         // SLOT SETUP
@@ -465,23 +573,7 @@ public class UserInterface {
         final int slotXstart = windowX + (frameWidth - totalSlotsWidth) / 2;
         final int slotYstart = windowY + (frameHeight - totalSlotsHeight) / 2;
 
-        // FILTER ITEMS BY TAB
-        ArrayList<Entity> filteredItems = new ArrayList<>();
-        for (int i = 0; i < this.gp.getPlayerInventorySize(); i++) {
-            Entity item = this.gp.getPlayerInventory(i);
-            if (inventoryTab == 0
-                    && (item.getType() == Entity.Type.EQUIPMENT
-                            || item.getType() == Entity.Type.AXE
-                            || item.getType() == Entity.Type.SWORD)) {
-                filteredItems.add(item);
-            } else if (inventoryTab == 1
-                    && (item.getType() == Entity.Type.MATERIAL
-                            || item.getType() == Entity.Type.CONSUMABLE)) {
-                filteredItems.add(item);
-            }
-        }
-
-        // DRAW SLOTSW
+        // DRAW SLOTS
         int totalSlots = slotCols * slotRows;
         for (int i = 0; i < totalSlots; i++) {
             int col = i % slotCols;
@@ -489,7 +581,8 @@ public class UserInterface {
             int x = slotXstart + (col * slotSize);
             int y = slotYstart + (row * slotSize);
 
-            Entity item = i < filteredItems.size() ? filteredItems.get(i) : null;
+            Entity item =
+                    i < this.gp.getPlayerInventorySize() ? this.gp.getPlayerInventory(i) : null;
             boolean equipped = item != null && item == this.gp.getPlayerCurrentWeapon();
             boolean selected = (col == slotCol && row == slotRow);
 
@@ -500,6 +593,15 @@ public class UserInterface {
                     item != null ? item.getDown1() : null,
                     equipped,
                     selected);
+
+            // DRAW AMOUNT
+            if (item != null && item.stackable) {
+                g2.setFont(g2.getFont().deriveFont(Font.BOLD, 14F));
+                g2.setColor(Color.white);
+                int amountX = x + gp.getTileSize() - 15;
+                int amountY = y + gp.getTileSize() - 5;
+                g2.drawString(String.valueOf(item.amount), amountX, amountY);
+            }
         }
 
         // DESCRIPTION FRAME
@@ -509,15 +611,15 @@ public class UserInterface {
         int dFrameHeight = this.gp.getTileSize() * 2;
 
         int itemIndex = getItemIndexOnSlot();
-        if (itemIndex < filteredItems.size()) {
+        if (itemIndex < this.gp.getPlayerInventorySize()) {
             ui.beginWindow(dFrameX, dFrameY, dFrameWidth, dFrameHeight);
-            Entity selectedItem = filteredItems.get(itemIndex);
+            Entity selectedItem = this.gp.getPlayerInventory(itemIndex);
             ui.multilineText(selectedItem.getDescription(), dFrameX + 20, dFrameY + 35, 32, 20f);
         }
 
         // HELP TEXT
         ui.text(
-                "Q/E: Ganti Tab | Enter: Pilih",
+                "Enter: Pilih",
                 windowX + 20,
                 windowY + frameHeight - 15,
                 14f,
@@ -550,12 +652,101 @@ public class UserInterface {
     }
 
     private void drawPauseScreen() {
-        this.g2.setFont(this.g2.getFont().deriveFont(Font.PLAIN, 80F));
-        String text = "PAUSED";
-        int x = getXforCenteredText(text);
-        int y = this.gp.getScreenHeight() / 2;
+        if (subState == 0) {
+            pauseMain();
+        } else if (subState == 1) {
+            pauseSettings();
+        }
+    }
 
-        g2.drawString(text, x, y);
+    private void pauseMain() {
+        g2.setColor(new Color(0, 0, 0, 150));
+        g2.fillRect(0, 0, gp.getScreenWidth(), gp.getScreenHeight());
+
+        int width = gp.getTileSize() * 8;
+        int height = gp.getTileSize() * 9;
+        int x = (gp.getScreenWidth() - width) / 2;
+        int y = (gp.getScreenHeight() - height) / 2;
+
+        drawSubWindow(x, y, width, height);
+
+        g2.setFont(g2.getFont().deriveFont(Font.BOLD, 48F));
+        String text = "PAUSED";
+        int tx = getXforCenteredText(text);
+        int ty = y + gp.getTileSize() * 2;
+        g2.setColor(new Color(255, 240, 200));
+        g2.drawString(text, tx, ty);
+
+        g2.setFont(g2.getFont().deriveFont(Font.BOLD, 28F));
+        g2.setColor(Color.white);
+
+        String[] options = {"Resume", "Settings", "Reload Game", "Game Menu", "Exit Game"};
+        for (int i = 0; i < options.length; i++) {
+            text = options[i];
+            tx = getXforCenteredText(text);
+            ty += gp.getTileSize() * 1.2;
+            g2.drawString(text, tx, ty);
+            if (commandNum == i) {
+                g2.drawString(">", tx - 30, ty);
+            }
+        }
+    }
+
+    private void pauseSettings() {
+        g2.setColor(new Color(0, 0, 0, 150));
+        g2.fillRect(0, 0, gp.getScreenWidth(), gp.getScreenHeight());
+
+        int width = gp.getTileSize() * 10;
+        int height = gp.getTileSize() * 8;
+        int x = (gp.getScreenWidth() - width) / 2;
+        int y = (gp.getScreenHeight() - height) / 2;
+
+        drawSubWindow(x, y, width, height);
+
+        g2.setFont(g2.getFont().deriveFont(Font.BOLD, 42F));
+        String text = "SETTINGS";
+        int tx = getXforCenteredText(text);
+        int ty = y + (int) (gp.getTileSize() * 1.8);
+        g2.setColor(new Color(255, 240, 200));
+        g2.drawString(text, tx, ty);
+
+        g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 24F));
+        g2.setColor(Color.white);
+
+        // Music Volume
+        text = "Music Volume";
+        tx = x + gp.getTileSize();
+        ty += (int) (gp.getTileSize() * 1.5);
+        g2.drawString(text, tx, ty);
+        drawVolumeBar(x + width - gp.getTileSize() * 4, ty - 20, gp.music.getVolumeScale());
+        if (commandNum == 0) g2.drawString(">", tx - 25, ty);
+
+        // SE Volume
+        text = "SE Volume";
+        ty += gp.getTileSize();
+        g2.drawString(text, tx, ty);
+        drawVolumeBar(x + width - gp.getTileSize() * 4, ty - 20, gp.se.getVolumeScale());
+        if (commandNum == 1) g2.drawString(">", tx - 25, ty);
+
+        // Back
+        text = "Back";
+        tx = getXforCenteredText(text);
+        ty += (int) (gp.getTileSize() * 1.5);
+        g2.drawString(text, tx, ty);
+        if (commandNum == 2) g2.drawString(">", tx - 25, ty);
+    }
+
+    private void drawVolumeBar(int x, int y, int scale) {
+        int width = 120;
+        int height = 24;
+
+        g2.setColor(new Color(70, 50, 30));
+        g2.fillRect(x, y, width, height);
+        g2.setColor(new Color(214, 166, 82));
+        g2.drawRect(x, y, width, height);
+
+        int volumeWidth = (width / 5) * scale;
+        g2.fillRect(x, y, volumeWidth, height);
     }
 
     private void drawGameOverScreen() {
@@ -691,7 +882,7 @@ public class UserInterface {
                 textX,
                 textY + lineHeight);
         this.g2.drawString(
-                "Inventory: " + this.gp.getFarmState().getInventory(),
+                "Inventory: " + this.gp.getFarmState().getInventory() + " TBS",
                 textX,
                 textY + lineHeight * 2);
         this.g2.drawString(

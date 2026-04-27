@@ -66,6 +66,14 @@ public class AssetSetter {
                 this.gp.getTileSize() * 44,
                 this.gp.getTileSize() * 3);
         i++;
+
+        // MARKET
+        this.gp.setObject(
+                i,
+                new com.uph_lpjk.sawit2d.object.ObjMarket(this.gp),
+                this.gp.getTileSize() * 45,
+                this.gp.getTileSize() * 3);
+        i++;
     }
 
     public void setInteractiveTile() {
@@ -73,8 +81,9 @@ public class AssetSetter {
         Random random = new java.util.Random();
 
         // Define Safe Zone (Building areas in Branch B)
-        int houseX = 2, houseY = 2;
-        int garageX = 45, garageY = 2;
+        int houseX = 41, houseY = 2;
+        int garageX = 43, garageY = 2;
+        int marketX = 45, marketY = 3;
         int farmAreaStart = 7, farmAreaEnd = 42;
 
         for (int row = 0; row < gp.getMaxWorldRow(); row++) {
@@ -83,6 +92,7 @@ public class AssetSetter {
                 // 1. AVOID BUILDINGS & FARM GRID
                 if (Math.abs(col - houseX) < 5 && Math.abs(row - houseY) < 5) continue;
                 if (Math.abs(col - garageX) < 5 && Math.abs(row - garageY) < 5) continue;
+                if (Math.abs(col - marketX) < 5 && Math.abs(row - marketY) < 5) continue;
                 if (col >= farmAreaStart
                         && col <= farmAreaEnd
                         && row >= farmAreaStart
