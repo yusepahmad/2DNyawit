@@ -112,6 +112,108 @@ public class KeyHandler implements KeyListener {
             case GAME_OVER:
                 gameOverState(code);
                 break;
+            case MARKET:
+                marketState(code);
+                break;
+        }
+    }
+
+    private void marketState(int code) {
+        int subState = gp.getUserInterface().getSubState();
+        int commandNum = gp.getUICommandNum();
+
+        if (subState == 0) {
+            // MAIN MARKET MENU
+            if (code == KeyEvent.VK_W) {
+                gp.setUICommandNum(commandNum - 1);
+                if (gp.getUICommandNum() < 0) gp.setUICommandNum(2);
+                gp.playSoundEffect(9);
+            }
+            if (code == KeyEvent.VK_S) {
+                gp.setUICommandNum(commandNum + 1);
+                if (gp.getUICommandNum() > 2) gp.setUICommandNum(0);
+                gp.playSoundEffect(9);
+            }
+            if (code == KeyEvent.VK_ENTER) {
+                switch (commandNum) {
+                    case 0: // Buy Seeds
+                        gp.getUserInterface().setSubState(1);
+                        gp.getUserInterface().setBuyQty(1);
+                        break;
+                    case 1: // Sell Harvest
+                        gp.getUserInterface().setSubState(2);
+                        gp.getUserInterface().setSellQty(1);
+                        break;
+                    case 2: // Exit
+                        gp.setGameState(GamePanel.State.PLAY);
+                        gp.setUICommandNum(0);
+                        break;
+                }
+                gp.playSoundEffect(9);
+            }
+            if (code == KeyEvent.VK_ESCAPE || code == KeyEvent.VK_M) {
+                gp.setGameState(GamePanel.State.PLAY);
+                gp.setUICommandNum(0);
+                gp.playSoundEffect(9);
+            }
+        } else if (subState == 1) {
+            // BUY QUANTITY SELECTION
+            if (code == KeyEvent.VK_W || code == KeyEvent.VK_D) {
+                gp.getUserInterface().setBuyQty(gp.getUserInterface().getBuyQty() + 1);
+                gp.playSoundEffect(9);
+            }
+            if (code == KeyEvent.VK_S || code == KeyEvent.VK_A) {
+                gp.getUserInterface().setBuyQty(gp.getUserInterface().getBuyQty() - 1);
+                gp.playSoundEffect(9);
+            }
+            if (code == KeyEvent.VK_ENTER) {
+                int qty = gp.getUserInterface().getBuyQty();
+                int totalCost = qty * 30;
+                if (gp.getPlayerGold() >= totalCost) {
+                    gp.setPlayerGold(-totalCost);
+                    com.uph_lpjk.sawit2d.object.ObjBibitSawit seeds =
+                            new com.uph_lpjk.sawit2d.object.ObjBibitSawit(gp);
+                    seeds.amount = qty;
+                    gp.getPlayer().obtainItem(seeds);
+                    gp.addUIMessage("Berhasil membeli " + qty + " bibit sawit.");
+                    gp.getUserInterface().setSubState(0);
+                } else {
+                    gp.addUIMessage("Gold tidak cukup!");
+                }
+                gp.playSoundEffect(9);
+            }
+            if (code == KeyEvent.VK_ESCAPE) {
+                gp.getUserInterface().setSubState(0);
+                gp.playSoundEffect(9);
+            }
+        } else if (subState == 2) {
+            // SELL QUANTITY SELECTION
+            if (code == KeyEvent.VK_W || code == KeyEvent.VK_D) {
+                gp.getUserInterface().setSellQty(gp.getUserInterface().getSellQty() + 1);
+                gp.playSoundEffect(9);
+            }
+            if (code == KeyEvent.VK_S || code == KeyEvent.VK_A) {
+                gp.getUserInterface().setSellQty(gp.getUserInterface().getSellQty() - 1);
+                gp.playSoundEffect(9);
+            }
+            if (code == KeyEvent.VK_F) { // Sell All
+                gp.getUserInterface().setSellQty(gp.getFarmState().getInventory());
+                gp.playSoundEffect(9);
+            }
+            if (code == KeyEvent.VK_ENTER) {
+                int qty = gp.getUserInterface().getSellQty();
+                if (qty > 0 && qty <= gp.getFarmState().getInventory()) {
+                    gp.getFarmSystem().sellInventory(qty);
+                    gp.getUserInterface().setSubState(0);
+                } else if (qty > gp.getFarmState().getInventory()) {
+                    gp.addUIMessage("Stok tidak cukup!");
+                }
+                gp.playSoundEffect(9);
+            }
+            if (code == KeyEvent.VK_ESCAPE) {
+                gp.getUserInterface().setSubState(0);
+                gp.playSoundEffect(9);
+            }
         }
     }
 
@@ -140,7 +242,7 @@ public class KeyHandler implements KeyListener {
         if (code == KeyEvent.VK_ENTER) {
             if (this.gp.getUICommandNum() == 0) {
                 this.gp.setGameState(GamePanel.State.PLAY);
-                // gp.playMusic(0);
+                gp.playMusic(0);
             }
             if (this.gp.getUICommandNum() == 2) System.exit(0);
         }
@@ -170,9 +272,28 @@ public class KeyHandler implements KeyListener {
         if (code == KeyEvent.VK_J) this.autoSellPressed = true;
         if (code == KeyEvent.VK_K) this.autoHarvestPressed = true;
         if (code == KeyEvent.VK_R) this.gp.loadMap();
-        if (code == KeyEvent.VK_P) this.gp.setGameState(GamePanel.State.PAUSE);
+        if (code == KeyEvent.VK_ESCAPE) this.gp.setGameState(GamePanel.State.PAUSE);
         if (code == KeyEvent.VK_C) this.gp.setGameState(GamePanel.State.CHARACTER);
+        if (code == KeyEvent.VK_M) {
+            if (isNearMarket()) {
+                this.gp.setGameState(GamePanel.State.MARKET);
+                this.gp.setUICommandNum(0);
+            } else {
+                this.gp.addUIMessage("Anda harus berada di dekat pasar untuk bertransaksi!");
+            }
+        }
         if (code == KeyEvent.VK_T) this.showDebugText = !this.showDebugText;
+    }
+
+    private boolean isNearMarket() {
+        int playerCol = gp.getPlayer().getWorldX() / gp.getTileSize();
+        int playerRow = gp.getPlayer().getWorldY() / gp.getTileSize();
+
+        // Market is at (10, 3). Check if player is within 4 tiles radius.
+        int marketX = 10;
+        int marketY = 3;
+
+        return Math.abs(playerCol - marketX) <= 4 && Math.abs(playerRow - marketY) <= 4;
     }
 
     public void characterState(int code) {
@@ -202,29 +323,101 @@ public class KeyHandler implements KeyListener {
             }
         }
 
-        // TAB SWITCHING
-        if (code == KeyEvent.VK_Q) {
-            int currentTab = this.gp.getUIInventoryTab();
-            if (currentTab > 0) {
-                this.gp.setUIInventoryTab(currentTab - 1);
-                this.gp.playSoundEffect(9);
-            }
-        }
-        if (code == KeyEvent.VK_E) {
-            int currentTab = this.gp.getUIInventoryTab();
-            if (currentTab < 1) { // We only have 2 tabs for now
-                this.gp.setUIInventoryTab(currentTab + 1);
-                this.gp.playSoundEffect(9);
-            }
-        }
-
         if (code == KeyEvent.VK_ENTER) {
             this.gp.setPlayerSelectItem();
         }
     }
 
     private void pauseState(int code) {
-        if (code == KeyEvent.VK_P) this.gp.setGameState(GamePanel.State.PLAY);
+        int subState = gp.getUserInterface().getSubState();
+        int commandNum = gp.getUICommandNum();
+
+        if (code == KeyEvent.VK_ESCAPE) {
+            if (subState == 0) {
+                gp.setGameState(GamePanel.State.PLAY);
+            } else {
+                gp.getUserInterface().setSubState(0);
+                gp.setUICommandNum(0);
+            }
+            return;
+        }
+
+        if (subState == 0) {
+            // MAIN PAUSE MENU
+            if (code == KeyEvent.VK_W) {
+                gp.setUICommandNum(commandNum - 1);
+                if (gp.getUICommandNum() < 0) gp.setUICommandNum(4);
+                gp.playSoundEffect(9);
+            }
+            if (code == KeyEvent.VK_S) {
+                gp.setUICommandNum(commandNum + 1);
+                if (gp.getUICommandNum() > 4) gp.setUICommandNum(0);
+                gp.playSoundEffect(9);
+            }
+            if (code == KeyEvent.VK_ENTER) {
+                switch (commandNum) {
+                    case 0: // Resume
+                        gp.setGameState(GamePanel.State.PLAY);
+                        break;
+                    case 1: // Settings
+                        gp.getUserInterface().setSubState(1);
+                        gp.setUICommandNum(0);
+                        break;
+                    case 2: // Reload Game
+                        gp.getFarmSystem().resetSession();
+                        gp.loadMap();
+                        gp.getPlayer().resetToDefaultValues();
+                        gp.setGameState(GamePanel.State.PLAY);
+                        break;
+                    case 3: // Game Menu
+                        gp.getFarmSystem().resetSession();
+                        gp.getUserInterface().resetNotifications();
+                        gp.setUICommandNum(0);
+                        gp.setGameState(GamePanel.State.TITLE);
+                        gp.stopMusic();
+                        break;
+                    case 4: // Exit
+                        System.exit(0);
+                        break;
+                }
+                gp.playSoundEffect(9);
+            }
+        } else if (subState == 1) {
+            // SETTINGS MENU
+            if (code == KeyEvent.VK_W) {
+                gp.setUICommandNum(commandNum - 1);
+                if (gp.getUICommandNum() < 0) gp.setUICommandNum(2);
+                gp.playSoundEffect(9);
+            }
+            if (code == KeyEvent.VK_S) {
+                gp.setUICommandNum(commandNum + 1);
+                if (gp.getUICommandNum() > 2) gp.setUICommandNum(0);
+                gp.playSoundEffect(9);
+            }
+            if (code == KeyEvent.VK_A) {
+                if (commandNum == 0 && gp.music.getVolumeScale() > 0) {
+                    gp.music.setVolumeScale(gp.music.getVolumeScale() - 1);
+                }
+                if (commandNum == 1 && gp.se.getVolumeScale() > 0) {
+                    gp.se.setVolumeScale(gp.se.getVolumeScale() - 1);
+                }
+                gp.playSoundEffect(9);
+            }
+            if (code == KeyEvent.VK_D) {
+                if (commandNum == 0 && gp.music.getVolumeScale() < 5) {
+                    gp.music.setVolumeScale(gp.music.getVolumeScale() + 1);
+                }
+                if (commandNum == 1 && gp.se.getVolumeScale() < 5) {
+                    gp.se.setVolumeScale(gp.se.getVolumeScale() + 1);
+                }
+                gp.playSoundEffect(9);
+            }
+            if (code == KeyEvent.VK_ENTER && commandNum == 2) {
+                gp.getUserInterface().setSubState(0);
+                gp.setUICommandNum(1); // Return to 'Settings' option
+                gp.playSoundEffect(9);
+            }
+        }
     }
 
     private void gameOverState(int code) {

@@ -58,6 +58,8 @@ public class Entity {
     protected String description;
     protected int attackValue;
     protected int value;
+    public int amount = 1;
+    public boolean stackable = false;
 
     // TYPE
     public enum Type {
@@ -68,6 +70,7 @@ public class Entity {
         CONSUMABLE,
         PICKUP_ONLY,
         HOME,
+        MARKET,
         EQUIPMENT,
         MATERIAL
     }
@@ -344,8 +347,7 @@ public class Entity {
     }
 
     public BufferedImage setupImage(String imagePath, int width, int height) {
-        String fullPath = imagePath.endsWith(".png") ? imagePath : imagePath + ".png";
-        return assetLoader.loadImage(width, height, fullPath);
+        return assetLoader.loadImage(width, height, imagePath);
     }
 
     public void draw(Graphics2D g2) {

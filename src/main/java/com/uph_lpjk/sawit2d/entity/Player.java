@@ -3,7 +3,6 @@ package com.uph_lpjk.sawit2d.entity;
 import com.uph_lpjk.sawit2d.controller.GamePanel;
 import com.uph_lpjk.sawit2d.controller.KeyHandler;
 import com.uph_lpjk.sawit2d.object.ObjAxe;
-import com.uph_lpjk.sawit2d.object.ObjBibitSawit;
 
 import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
@@ -54,7 +53,44 @@ public class Player extends Entity {
     private void setItems() {
         this.inventory.add(currentWeapon);
         this.inventory.add(new ObjAxe(this.gp));
-        this.inventory.add(new ObjBibitSawit(this.gp));
+    }
+
+    public void obtainItem(Entity item) {
+        if (item.stackable) {
+            int index = searchItemInInventory(item.getName());
+            if (index != 999) {
+                this.inventory.get(index).amount += item.amount;
+                return;
+            }
+        }
+
+        if (this.inventory.size() < MAX_INVENTORY_SIZE) {
+            this.inventory.add(item);
+        }
+    }
+
+    public int searchItemInInventory(String itemName) {
+        for (int i = 0; i < this.inventory.size(); i++) {
+            if (this.inventory.get(i).getName().equals(itemName)) {
+                return i;
+            }
+        }
+        return 999;
+    }
+
+    public boolean consumeItem(String itemName, int amount) {
+        int index = searchItemInInventory(itemName);
+        if (index != 999) {
+            Entity item = this.inventory.get(index);
+            if (item.amount >= amount) {
+                item.amount -= amount;
+                if (item.amount <= 0) {
+                    this.inventory.remove(index);
+                }
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -132,12 +168,12 @@ public class Player extends Entity {
         if (currentWeapon.getType() == Type.AXE || currentWeapon.getType() == Type.EQUIPMENT) {
             this.attackDown1 =
                     setupImage(
-                            "/player/attacks/boy_axe_down_1",
+                            "/player/attacks/mouse_kapak_atas",
                             this.gp.getTileSize(),
                             this.gp.getTileSize() * 2);
             this.attackDown2 =
                     setupImage(
-                            "/player/attacks/boy_axe_down_2",
+                            "/player/attacks/mouse_kapak_bawah",
                             this.gp.getTileSize(),
                             this.gp.getTileSize() * 2);
             this.attackUp1 =
@@ -152,22 +188,22 @@ public class Player extends Entity {
                             this.gp.getTileSize() * 2);
             this.attackRight1 =
                     setupImage(
-                            "/player/attacks/boy_axe_right_1",
+                            "/player/attacks/rat-axe-right-1",
                             this.gp.getTileSize() * 2,
                             this.gp.getTileSize());
             this.attackRight2 =
                     setupImage(
-                            "/player/attacks/boy_axe_right_2",
+                            "/player/attacks/rat-axe-right-2",
                             this.gp.getTileSize() * 2,
                             this.gp.getTileSize());
             this.attackLeft1 =
                     setupImage(
-                            "/player/attacks/boy_axe_left_1",
+                            "/player/attacks/rat-axe-left-1",
                             this.gp.getTileSize() * 2,
                             this.gp.getTileSize());
             this.attackLeft2 =
                     setupImage(
-                            "/player/attacks/boy_axe_left_2",
+                            "/player/attacks/rat-axe-left-2",
                             this.gp.getTileSize() * 2,
                             this.gp.getTileSize());
         }
@@ -257,45 +293,44 @@ public class Player extends Entity {
             this.spriteNum = 1;
         }
 
-        if (this.spriteCounter > 5 && this.spriteCounter <= 25) {
+        if (this.spriteCounter > 5 && this.spriteCounter <= 15) {
             this.spriteNum = 2;
 
-            // Save the current worldX, worldY, solidArea
-            int currentWorldX = this.worldX;
-            int currentWorldY = this.worldY;
-            int solidAreaWidth = solidArea.width;
-            int solidAreaHeight = solidArea.height;
+            // Define attack box in world coordinates
+            int worldX = getWorldX();
+            int worldY = getWorldY();
+            java.awt.Rectangle attackBox = new java.awt.Rectangle();
+            attackBox.width = this.attackArea.width;
+            attackBox.height = this.attackArea.height;
 
-            // Adjust players worldX/Y for the attackArea
             switch (getDirection()) {
                 case "up":
-                    this.worldY -= this.attackArea.height;
+                    attackBox.x = worldX + (getTileSize() - attackBox.width) / 2;
+                    attackBox.y = worldY - attackBox.height;
                     break;
                 case "down":
-                    this.worldY += this.attackArea.height;
+                    attackBox.x = worldX + (getTileSize() - attackBox.width) / 2;
+                    attackBox.y = worldY + getTileSize();
                     break;
                 case "left":
-                    this.worldX -= this.attackArea.width;
+                    attackBox.x = worldX - attackBox.width;
+                    attackBox.y = worldY + (getTileSize() - attackBox.height) / 2;
                     break;
                 case "right":
-                    this.worldX += this.attackArea.width;
+                    attackBox.x = worldX + getTileSize();
+                    attackBox.y = worldY + (getTileSize() - attackBox.height) / 2;
                     break;
             }
 
-            // attackArea become solidArea
-            this.solidArea.width = this.attackArea.width;
-            this.solidArea.height = this.attackArea.height;
-
-            int iTileIndex = this.gp.getCheckInteractiveTile(this, this.gp.getInteractiveTile());
+            int iTileIndex = this.gp.getCheckAttack(this, this.gp.getInteractiveTile(), attackBox);
             damageInteractiveTile(iTileIndex);
-
-            this.worldX = currentWorldX;
-            this.worldY = currentWorldY;
-            this.solidArea.width = solidAreaWidth;
-            this.solidArea.height = solidAreaHeight;
         }
 
-        if (this.spriteCounter > 25) {
+        if (this.spriteCounter > 15 && this.spriteCounter <= 20) {
+            this.spriteNum = 1;
+        }
+
+        if (this.spriteCounter > 20) {
             this.spriteNum = 1;
             this.spriteCounter = 0;
             this.attacking = false;
