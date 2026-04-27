@@ -1,35 +1,37 @@
-# System Architecture
+# Arsitektur Sistem
 
-## High-level structure
-The architecture is a simple, game-loop-driven design centered around `GamePanel`. It is not strict MVC, but follows a similar separation:
-- Model: farm systems, game state, entities
-- View: rendering code and UI overlay
-- Controller: input handling and update loop
+## Struktur tingkat tinggi
 
-ASCII component diagram:
+Arsitektur ini merupakan desain sederhana berbasis game loop yang berpusat pada `GamePanel`. Tidak sepenuhnya mengikuti MVC, tetapi memiliki pemisahan yang mirip:
+
+* Model: sistem farm, state game, entitas
+* View: kode rendering dan overlay UI
+* Controller: penanganan input dan loop update
+
+Diagram komponen ASCII:
+
 ```
-[KeyHandler/Mouse] -> [GamePanel] -> [Player, FarmSystem]
-                                   -> [TileManager, UI]
+[KeyHandler/Mouse] -> [GamePanel] -> [Player, FarmSystem] -> [TileManager, UI]
 ```
 
-## Key components
-- GamePanel: main loop, rendering orchestration, state transitions.
-- TileManager: loads maps and draws tile layers.
-- Player/Entity: movement, combat, and shared entity behavior.
-- FarmSystem: farm grid simulation, risk, disasters, and UI messaging.
-- UserInterface: HUD, banners, and game over screens.
-- Sound: preloads and plays SFX and music.
-- FirefighterEventSystem: modal dialog flow for firefighter decisions.
+## Komponen utama
 
-## Data flow
-- Input events update flags in KeyHandler.
-- GamePanel consumes flags and calls Player and FarmSystem.
-- FarmSystem updates GameState and sends messages to UI.
-- UI reads GameState and FarmSystem to display status and banners.
+* GamePanel: loop utama, orkestrasi rendering, transisi state.
+* TileManager: memuat map dan menggambar layer tile.
+* Player/Entity: pergerakan, pertarungan, dan perilaku dasar entitas.
+* FarmSystem: simulasi grid farm, risiko, bencana, dan pesan UI.
+* UserInterface: HUD, banner, dan layar game over.
+* Sound: memuat dan memutar efek suara serta musik.
+* FirefighterEventSystem: alur dialog modal untuk keputusan pemadam kebakaran.
 
-## Design notes
-- Entity rendering is sorted by worldY to simulate depth.
-- FarmSystem uses helper subsystems (risk, economy, weather, disaster) for focused logic.
+## Alur data
 
-## Notes and assumptions
-- The project uses lightweight custom patterns rather than a full engine framework.
+* Event input memperbarui flag di KeyHandler.
+* GamePanel membaca flag dan memanggil Player serta FarmSystem.
+* FarmSystem memperbarui GameState dan mengirim pesan ke UI.
+* UI membaca GameState dan FarmSystem untuk menampilkan status dan banner.
+
+## Catatan desain
+
+* Rendering entitas diurutkan berdasarkan worldY untuk mensimulasikan kedalaman.
+* FarmSystem menggunakan subsistem pembantu (risiko, ekonomi, cuaca, bencana) untuk logika yang lebih terfokus.

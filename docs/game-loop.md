@@ -1,30 +1,34 @@
 # Game Loop
 
-## Loop overview
-The loop is implemented manually in `GamePanel` using a dedicated thread and a fixed time step. Each cycle updates game state, renders to an off-screen buffer, then draws to screen.
+Loop diimplementasikan secara manual di `GamePanel` menggunakan thread khusus dan fixed time step. Setiap siklus memperbarui state game, melakukan render ke buffer off-screen, lalu menggambar ke layar.
 
-ASCII diagram:
+Diagram ASCII:
+
 ```
 Input -> Update -> Render (to temp buffer) -> Blit to screen
 ```
 
-## Update phase
-- Player update: movement, collision checks, attack state.
-- Farm system update: auto actions, day and hour progression, fire animation.
-- Interactive tiles update: invincibility timers.
-- Particle update: advance and remove dead particles.
+## Fase update
 
-## Render phase
-- Tile map background
-- Farm grid overlay (growth, fire, rain)
-- Object layer tiles
-- Interactive tiles and entities (sorted by worldY)
-- UI overlay (status, banners, hints)
+* Update pemain: pergerakan, pengecekan collision, status penebangan.
+* Update sistem farm: aksi otomatis, progres hari dan jam, animasi api.
+* Update tile interaktif: timer invincibility.
+* Update partikel: memperbarui dan menghapus partikel yang sudah tidak aktif.
 
-## Swing integration
-GamePanel uses a custom thread and draws into a `BufferedImage` (`tempScreen`) to reduce flicker. `paintComponent()` reuses this buffer when Swing repaints.
+## Fase render
+
+* Background tile map
+* Overlay grid farm (pertumbuhan, api, hujan)
+* Layer objek tile
+* Tile interaktif dan entitas (diurutkan berdasarkan worldY)
+* Overlay UI (status, banner, petunjuk)
+
+## Integrasi dengan Swing
+
+GamePanel menggunakan thread kustom dan menggambar ke dalam `BufferedImage` (`tempScreen`) untuk mengurangi flicker. `paintComponent()` menggunakan kembali buffer ini saat Swing melakukan repaint.
 
 Pseudocode:
+
 ```
 while (running) {
   accumulateDelta();
@@ -36,6 +40,3 @@ while (running) {
   }
 }
 ```
-
-## Notes and assumptions
-- The loop runs at a fixed target of 60 FPS.

@@ -1,33 +1,33 @@
-# Code Structure
+# Struktur Kode
 
-## Packages
-- `controller`
-- `entity`
-- `farm`
-- `tile`
-- `interactive/tile`
-- `object`
-- `utility`
+## Package
 
-## Core classes
-- `App`: application entry point and Swing window setup.
-- `GamePanel`: game loop, rendering pipeline, and state machine.
-- `KeyHandler`: input capture and action flags.
-- `CollisionChecker`: collision checks for tiles, objects, and entities.
-- `TileManager` and `Tile`: map loading and tile rendering.
-- `UserInterface`: HUD, banners, game over screens.
-- `Player` and `Entity`: movement, attack logic, base entity fields.
-- `FarmSystem`, `FarmGrid`, `FarmTile`: farm simulation and rendering.
-- `EconomySystem`, `RiskSystem`, `DisasterSystem`, `WeatherSystem`: farm subsystems.
-- `FirefighterEventSystem`: modal choice dialog.
-- `Sound`: audio playback.
+* `controller`
+* `entity`
+* `farm`
+* `tile`
+* `interactive/tile`
+* `object`
+* `utility`
 
-## Resource layout
-- `maps`: text-based tile maps
-- `tile`, `tiles_interactive`: terrain and interactive sprites
-- `objects`, `player`: game sprites
-- `sounds`, `fonts`: audio and fonts
-- `sawit`, `fire`: farm growth and fire animation
+## Kelas inti
 
-## Notes and assumptions
-- Only key classes are listed; object and utility classes are expandable.
+* `App`: titik masuk aplikasi dan setup jendela Swing.
+* `GamePanel`: game loop, pipeline rendering, dan state machine.
+* `KeyHandler`: penangkap input dan flag aksi.
+* `CollisionChecker`: pengecekan collision untuk tile, objek, dan entitas.
+* `TileManager` dan `Tile`: loading map dan rendering tile.
+* `UserInterface`: HUD, banner, dan layar game over.
+* `Player` dan `Entity`: pergerakan, logika serangan, dan atribut dasar entitas.
+* `FarmSystem`, `FarmGrid`, `FarmTile`: simulasi dan rendering farm.
+* `EconomySystem`, `RiskSystem`, `DisasterSystem`, `WeatherSystem`: subsistem farm.
+* `FirefighterEventSystem`: dialog pilihan modal.
+* `Sound`: pemutaran audio.
+
+## Struktur resource
+
+* `maps`: tile map berbasis teks
+* `tile`, `tiles_interactive`: terrain dan sprite interaktif
+* `objects`, `player`: sprite game
+* `sounds`, `fonts`: audio dan font
+* `sawit`, `fire`: pertumbuhan sawit dan animasi api

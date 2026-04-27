@@ -1,43 +1,47 @@
-# Sawit2D Technical Overview
+# Sawit2D Gameplay Teknis
 
-## Project summary
-Sawit2D is a 2D top-down adventure and farming game built with Java Swing/AWT. The codebase combines tile-based world exploration with a farm management subsystem (planting, harvesting, disasters).
+## Ringkasan proyek
 
-## Project goals
-- Provide a lightweight, tile-based game loop and rendering pipeline.
-- Simulate farm growth, risk, and disaster events in a manageable grid.
-- Support keyboard and mouse interactions for movement and farm actions.
+Sawit2D adalah game petualangan dan farming 2D top-down yang dibangun menggunakan Java Swing/AWT. Basis kode menggabungkan eksplorasi dunia berbasis tile dengan subsistem manajemen pertanian (menanam, memanen, bencana).
 
-## Technology stack
-- Java (JDK 8+)
-- Swing/AWT for rendering and input
-- Maven for build and dependency management
-- JUnit for tests (basic setup)
+## Tujuan proyek
 
-## Entry point
-The application starts from `com.uph_lpjk.sawit2d.App` which creates a Swing `JFrame` and attaches `GamePanel`.
+* Menyediakan game loop ringan berbasis tile dan pipeline rendering.
+* Mensimulasikan pertumbuhan pertanian, risiko, dan kejadian bencana dalam grid yang terkelola.
+* Mendukung interaksi keyboard dan mouse untuk pergerakan dan aksi pertanian.
 
-Run command:
+## Teknologi yang digunakan
+
+* Java (JDK 8+)
+* Swing/AWT untuk rendering dan input
+* Maven untuk build dan manajemen dependensi
+
+## Titik masuk
+
+Aplikasi dimulai dari `com.uph_lpjk.sawit2d.App` yang membuat `JFrame` Swing dan menghubungkan `GamePanel`.
+
+Perintah untuk menjalankan:
+
 ```bash
 mvn exec:java -Dexec.mainClass="com.uph_lpjk.sawit2d.App"
 ```
 
-## Main folder structure
-- `src/main/java/com/uph_lpjk/sawit2d`
-  - `controller`: main loop, input, UI, audio, collision, event handling
-  - `entity`: player and base entity logic
-  - `farm`: farm grid, economy, risk, disaster, weather, and helper services
-  - `tile`: tile map loading and rendering
-  - `interactive/tile`: destructible tiles (e.g., dry trees)
-  - `object`: world objects and items
-  - `utility`: asset loading and image utilities
-- `src/main/resources`
-  - `maps`: tile maps (txt)
-  - `tile`, `tiles_interactive`: tiles and interactive sprites
-  - `objects`, `player`: game sprites
-  - `sounds`, `fonts`: audio and fonts
-  - `sawit`, `fire`: farm growth and fire animation assets
-- `docs`: developer documentation (this folder)
+## Struktur folder utama
 
-## Notes and assumptions
-- Some gameplay goals are open-ended; no explicit win condition is shown in code.
+* `src/main/java/com/uph_lpjk/sawit2d`
+
+  * `controller`: main loop, input, UI, audio, collision, penanganan event
+  * `entity`: pemain dan logika dasar entitas
+  * `farm`: grid pertanian, ekonomi, risiko, bencana, cuaca, dan layanan helper
+  * `tile`: loading dan rendering tile map
+  * `interactive/tile`: tile interaktif yang bisa dihancurkan (misalnya pohon kering)
+  * `object`: objek dunia dan item
+  * `utility`: loading aset dan utilitas gambar
+* `src/main/resources`
+
+  * `maps`: tile map (txt)
+  * `tile`, `tiles_interactive`: tile dan sprite interaktif
+  * `objects`, `player`: sprite game
+  * `sounds`, `fonts`: audio dan font
+  * `sawit`, `fire`: aset pertumbuhan sawit dan animasi api
+* `docs`: dokumentasi developer (folder ini)

@@ -1,43 +1,48 @@
-# Game Logic
+# Logika Game
 
-## Game states
-- TITLE: main menu.
-- PLAY: active gameplay.
-- PAUSE: gameplay frozen.
-- GAME_OVER: message and return to title.
+## State game
 
-Transitions:
-- TITLE -> PLAY: Enter
-- PLAY -> PAUSE: P
-- PAUSE -> PLAY: P
-- GAME_OVER -> TITLE: Enter
+* TITLE: menu utama.
+* PLAY: gameplay aktif.
+* PAUSE: gameplay dihentikan sementara.
+* GAME_OVER: menampilkan pesan dan kembali ke menu utama.
 
-## Farm rules
-- Planting costs 30 gold per tile.
-- Firebreak costs 20 gold per tile.
-- Manual fire handling costs 25 gold.
-- Growth time for sawit is 3 days.
+Transisi:
 
-## Daily cycle
-- Hour increments during update; day advances after hour 23.
-- Daily transition:
-  - Growth and unused-land counters update.
-  - Fire spreads if uncontrolled.
-  - Risk evaluated; rain may reduce risk and extinguish fires.
-  - Disaster may trigger (risk-based).
+* TITLE -> PLAY: Enter
+* PLAY -> PAUSE: P
+* PAUSE -> PLAY: P
+* GAME_OVER -> TITLE: Enter
 
-## Economy and inventory
-- Harvest adds to inventory.
-- Selling converts inventory to gold (base price 120, rain penalty multiplier).
-- Gardener service can harvest or sell with a cost or discount.
+## Aturan farm
 
-## Land seizure rule
-- If no planting happens for 14 consecutive days, game over.
+* Menanam membutuhkan 30 gold per tile.
+* Sekat api (firebreak) membutuhkan 20 gold per tile.
+* Penanganan api manual membutuhkan 25 gold.
+* Waktu tumbuh sawit adalah 3 hari.
 
-## Event handling
-- KeyHandler sets input flags; GamePanel consumes them each update.
-- Mouse clicks interact with farm tiles or firebreaks.
-- FirefighterEventSystem shows a modal dialog to choose a response.
+## Siklus harian
 
-## Notes and assumptions
-- Gold game over triggers when gold drops below 0.
+* Jam bertambah selama update; hari berganti setelah jam 23.
+* Transisi harian:
+
+  * Pertumbuhan dan counter lahan tidak terpakai diperbarui.
+  * Api menyebar jika tidak dikendalikan.
+  * Risiko dievaluasi; hujan dapat mengurangi risiko dan memadamkan api.
+  * Bencana dapat terjadi (berdasarkan risiko).
+
+## Ekonomi dan inventaris
+
+* Hasil panen ditambahkan ke inventaris.
+* Penjualan mengubah inventaris menjadi gold (harga dasar 120, dengan pengaruh penalti hujan).
+* Layanan tukang kebun dapat memanen atau menjual dengan biaya atau diskon tertentu.
+
+## Aturan penyitaan lahan
+
+* Jika tidak ada aktivitas menanam selama 14 hari berturut-turut, maka game over.
+
+## Penanganan event
+
+* KeyHandler mengatur flag input; GamePanel memprosesnya setiap update.
+* Klik mouse digunakan untuk berinteraksi dengan tile farm atau sekat api.
+* FirefighterEventSystem menampilkan dialog modal untuk memilih respons.

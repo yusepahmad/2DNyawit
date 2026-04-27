@@ -1,36 +1,39 @@
-# Algorithms
+# Algoritma
 
-## Movement and animation
-- Input flags set direction.
-- Collision checks run before applying movement.
-- Sprite animation flips between frames using a counter.
+## Pergerakan dan animasi
 
-## Collision detection (tile)
-1. Compute entity bounding box in world space.
-2. Convert to tile grid coordinates.
-3. Check the two edge tiles in the direction of movement.
-4. Block movement if any tile has collision.
+* Flag input menentukan arah.
+* Pengecekan collision dilakukan sebelum pergerakan diterapkan.
+* Animasi sprite berganti antar frame menggunakan counter.
 
-## Collision detection (object and entity)
-- Adjust entity and target rectangles by world position.
-- Offset by speed in direction of motion.
-- Use rectangle intersection to detect overlap.
-- Restore original rectangle positions after the check.
+## Deteksi collision (tile)
 
-## Farm growth and harvest
-- Each planted tile stores `remainingGrowDays`.
-- Daily advance decreases `remainingGrowDays` until 0.
-- When 0, tile becomes ready-to-harvest.
+1. Hitung bounding box entitas dalam world space.
+2. Konversi ke koordinat grid tile.
+3. Periksa dua tile di sisi arah pergerakan.
+4. Blokir pergerakan jika ada tile yang memiliki collision.
 
-## Risk and disaster
-- Risk is evaluated from planted count, firebreak count, and cluster size.
-- Disaster chance increases with risk and can ignite random planted tiles.
-- Fire spread checks adjacent tiles of burning cells.
+## Deteksi collision (objek dan entitas)
 
-## Rendering order (depth)
-- All entities are collected into a list.
-- The list is sorted by worldY.
-- Entities are drawn in sorted order to simulate depth.
+* Sesuaikan rectangle entitas dan target berdasarkan posisi world.
+* Tambahkan offset sesuai kecepatan pada arah gerak.
+* Gunakan intersection rectangle untuk mendeteksi overlap.
+* Kembalikan posisi rectangle ke kondisi semula setelah pengecekan.
 
-## Notes and assumptions
-- Fire spread uses four-direction adjacency (no diagonals).
+## Pertumbuhan dan panen farm
+
+* Setiap tile yang ditanam menyimpan `remainingGrowDays`.
+* Progres harian mengurangi `remainingGrowDays` hingga 0.
+* Saat mencapai 0, tile siap untuk dipanen.
+
+## Risiko dan bencana
+
+* Risiko dihitung dari jumlah tanaman, jumlah sekat api, dan ukuran cluster.
+* Peluang bencana meningkat seiring risiko dan dapat memicu kebakaran pada tile yang ditanam secara acak.
+* Penyebaran api memeriksa tile yang bersebelahan dengan tile yang terbakar.
+
+## Urutan rendering (kedalaman)
+
+* Semua entitas dikumpulkan dalam sebuah list.
+* List diurutkan berdasarkan worldY.
+* Entitas digambar sesuai urutan untuk mensimulasikan kedalaman.

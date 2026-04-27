@@ -1,37 +1,39 @@
-# Game Description
+# Deskripsi Game
 
-## Gameplay overview
-Sawit2D is a top-down tile game where the player explores a world and manages a palm farm. The farm area is a grid where tiles can be planted, harvested, or protected with firebreaks.
+Sawit2D adalah game top-down berbasis tile di mana pemain menjelajahi dunia dan mengelola kebun sawit. Area kebun berupa grid di mana tile dapat ditanami, dipanen, atau dilindungi dengan sekat api (firebreak).
 
-## Core mechanics
-- Movement and combat: player moves with WASD and can attack with a tool.
-- Farming: plant sawit, wait for growth, harvest, and sell.
-- Risk and disasters: higher risk can trigger fires; player may call the elephant firefighter team.
-- Economy: gold is used for planting, firebreaks, and services; selling harvest earns gold.
+## Mekanisme inti
 
-## Objectives
-- Keep the farm productive and avoid land seizure due to long inactivity.
-- Manage risk and respond to fires.
-- Maintain gold balance to keep the simulation running.
+* Pergerakan dan menebang: pemain bergerak dengan WASD dan dapat menebang menggunakan alat.
+* Bertani: menanam sawit, menunggu pertumbuhan, memanen, dan menjual.
+* Risiko dan bencana: risiko yang lebih tinggi dapat memicu kebakaran; pemain dapat memanggil tim pemadam kebakaran gajah.
+* Ekonomi: emas digunakan untuk menanam, membuat sekat api, dan layanan; menjual hasil panen menghasilkan emas.
 
-## Player interactions
+## Tujuan
+
+* Menjaga kebun tetap produktif dan menghindari penyitaan lahan akibat tidak ada aktivitas dalam waktu lama.
+* Mengelola risiko dan merespons kebakaran.
+* Menjaga keseimbangan emas agar simulasi tetap berjalan.
+
+## Interaksi pemain
+
 Keyboard:
-- `WASD` move
-- `E` or `Enter` interact with farm tiles
-- `F` attack
-- `B` place or remove firebreak
-- `H` auto-plant, `K` auto-harvest, `J` auto-sell
-- `N` advance to next day
-- `Q` sell inventory
-- `P` pause
+
+* `WASD` bergerak
+* `E` atau `Enter` berinteraksi dengan tile kebun
+* `F` menebang
+* `B` memasang atau menghapus sekat api
+* `H` tanam otomatis, `K` panen otomatis, `J` jual otomatis
+* `N` lanjut ke hari berikutnya (hanya untuk development dan akan di hapus fitur nya ketika sudah production)
+* `Q` jual inventaris
+* `P` jeda
 
 Mouse:
-- Left click: interact with a farm tile
-- Right click: toggle firebreak at a farm tile
 
-## Game over conditions
-- Gold becomes negative (triggered when expenses exceed gold).
-- Land is seized after 14 consecutive days without any planting.
+* Klik kiri: berinteraksi dengan tile kebun
+* Klik kanan: mengaktifkan atau menonaktifkan sekat api pada tile kebun
 
-## Notes and assumptions
-- The game is designed as a sandbox-style simulation; no explicit win condition is implemented in code.
+## Kondisi game over
+
+* Emas menjadi negatif (terjadi ketika pengeluaran melebihi jumlah emas).
+* Lahan disita setelah 14 hari berturut-turut tanpa adanya aktivitas penanaman.

@@ -571,7 +571,7 @@ public class UserInterface {
 
         this.g2.setFont(this.g2.getFont().deriveFont(Font.BOLD, 26F));
         String reason = this.gp.getFarmState().getLastNotification();
-        String subtitle = "Tanah Anda Disita Negara";
+        String subtitle = "Yah Kamu Cupu sih, coba lagi deh!";
         if (reason != null && reason.toLowerCase().contains("gold habis")) {
             subtitle = "Gold Anda Habis Dasar Miskin Gausah so soan nyawit deh lu";
         }
