@@ -14,7 +14,6 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
-import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -338,27 +337,17 @@ public class GamePanel extends JPanel implements Runnable {
         if (w == null) return;
 
         if (windowScaleIndex == 2) {
-            // Fullscreen: gunakan ukuran layar penuh
-            Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
-            screenWidth2 = screen.width;
-            screenHeight2 = screen.height;
             fullScreenOn = true;
             if (w instanceof JFrame) {
                 ((JFrame) w).setExtendedState(JFrame.MAXIMIZED_BOTH);
             }
         } else {
-            // Normal atau Large: resize window biasa
             fullScreenOn = false;
             if (w instanceof JFrame) {
                 ((JFrame) w).setExtendedState(JFrame.NORMAL);
             }
-            if (windowScaleIndex == 0) {
-                screenWidth2 = SCREEN_WIDTH;
-                screenHeight2 = SCREEN_HEIGHT;
-            } else {
-                screenWidth2 = 1440;
-                screenHeight2 = 864;
-            }
+            screenWidth2 = (windowScaleIndex == 0) ? SCREEN_WIDTH : 1440;
+            screenHeight2 = (windowScaleIndex == 0) ? SCREEN_HEIGHT : 864;
             setPreferredSize(new Dimension(screenWidth2, screenHeight2));
             w.pack();
             w.setLocationRelativeTo(null);
@@ -366,14 +355,35 @@ public class GamePanel extends JPanel implements Runnable {
         repaint();
     }
 
+    /**
+     * Returns {x, y, width, height} of the centered, aspect-ratio-correct game image within the
+     * actual panel bounds. Adds black bars (pillarbox/letterbox) as needed.
+     */
+    private int[] getDrawBounds() {
+        int panelW = getWidth();
+        int panelH = getHeight();
+        if (panelW <= 0 || panelH <= 0) {
+            return new int[] {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
+        }
+        double scale = Math.min((double) panelW / SCREEN_WIDTH, (double) panelH / SCREEN_HEIGHT);
+        int drawW = (int) (SCREEN_WIDTH * scale);
+        int drawH = (int) (SCREEN_HEIGHT * scale);
+        int drawX = (panelW - drawW) / 2;
+        int drawY = (panelH - drawH) / 2;
+        return new int[] {drawX, drawY, drawW, drawH};
+    }
+
     private void handleFarmMouseInput(MouseEvent e) {
         this.requestFocusInWindow();
         if (gameState == null) return;
 
-        // Konversi koordinat mouse dari window-space ke game-space (960x576).
-        // Diperlukan agar klik tetap akurat saat window diperbesar atau fullscreen.
-        int gameX = e.getX() * SCREEN_WIDTH / screenWidth2;
-        int gameY = e.getY() * SCREEN_HEIGHT / screenHeight2;
+        // Map panel-space mouse coords to game-space (960x576), accounting for
+        // black bars so clicks in the letterbox/pillarbox area are clamped to edge.
+        int[] b = getDrawBounds();
+        int gameX = (int) ((e.getX() - b[0]) * SCREEN_WIDTH / (double) b[2]);
+        int gameY = (int) ((e.getY() - b[1]) * SCREEN_HEIGHT / (double) b[3]);
+        gameX = Math.max(0, Math.min(SCREEN_WIDTH - 1, gameX));
+        gameY = Math.max(0, Math.min(SCREEN_HEIGHT - 1, gameY));
 
         if (gameState == State.EVENT) {
             ui.handleEventInput(gameX, gameY);
@@ -816,16 +826,36 @@ public class GamePanel extends JPanel implements Runnable {
 
     public void drawToScreen() {
         Graphics g = getGraphics();
-        if (g != null) {
-            g.drawImage(tempScreen, 0, 0, screenWidth2, screenHeight2, null);
-            g.dispose();
+        if (g == null || tempScreen == null) return;
+        int[] b = getDrawBounds();
+        int drawX = b[0], drawY = b[1], drawW = b[2], drawH = b[3];
+        // Only fill the pillarbox/letterbox bands — never clear the game area.
+        // getGraphics() is an unbuffered path: fillRect+drawImage are not atomic,
+        // so clearing the full screen causes a black flash every frame (flicker).
+        if (drawX > 0 || drawY > 0) {
+            int pw = getWidth(), ph = getHeight();
+            g.setColor(Color.BLACK);
+            if (drawX > 0) {
+                g.fillRect(0, 0, drawX, ph);
+                g.fillRect(drawX + drawW, 0, pw - drawX - drawW, ph);
+            }
+            if (drawY > 0) {
+                g.fillRect(0, 0, pw, drawY);
+                g.fillRect(0, drawY + drawH, pw, ph - drawY - drawH);
+            }
         }
+        g.drawImage(tempScreen, drawX, drawY, drawW, drawH, null);
+        g.dispose();
     }
 
     @Override
     public void paintComponent(Graphics g) {
+        // super.paintComponent fills the component background (Color.black set in constructor),
+        // then Swing flips its double-buffer atomically — no flicker risk here.
         super.paintComponent(g);
-        if (tempScreen != null) g.drawImage(tempScreen, 0, 0, screenWidth2, screenHeight2, null);
+        if (tempScreen == null) return;
+        int[] b = getDrawBounds();
+        g.drawImage(tempScreen, b[0], b[1], b[2], b[3], null);
     }
 
     public void playMusic(int i) {

@@ -158,8 +158,8 @@ public class Player extends Entity {
         up1 = setupImage("/player/walking/rat-back", this.tileSize, this.tileSize);
         up2 = setupImage("/player/walking/rat-up", this.tileSize, this.tileSize);
         // Use rat (front-facing) and rat-down for alternating down frames
-        down1 = setupImage("/player/walking/rat", this.tileSize, this.tileSize);
-        down2 = setupImage("/player/walking/rat-down", this.tileSize, this.tileSize);
+        down1 = setupImage("/player/walking/rat-down-1", this.tileSize, this.tileSize);
+        down2 = setupImage("/player/walking/rat-down-2", this.tileSize, this.tileSize);
         // Use proper left/right directional sprites for side movement
         left1 = setupImage("/player/walking/rat-left", this.tileSize, this.tileSize);
         left2 = setupImage("/player/walking/rat-run-to-left", this.tileSize, this.tileSize);
@@ -173,12 +173,12 @@ public class Player extends Entity {
             int ts = this.gp.getTileSize();
 
             // Down attack: mouse_kapak_bawah.png
-            this.attackDown1 = setupImage("/player/attacks/mouse_kapak_bawah", ts, ts);
-            this.attackDown2 = setupImage("/player/attacks/mouse_kapak_bawah", ts, ts);
+            this.attackDown1 = setupImage("/player/attacks/rat-axe-down-1", ts, ts);
+            this.attackDown2 = setupImage("/player/attacks/rat-axe-down-2", ts, ts);
 
             // Up attack: rat_axe_up.png
-            this.attackUp1 = setupImage("/player/attacks/rat_axe_up", ts, ts);
-            this.attackUp2 = setupImage("/player/attacks/rat_axe_up", ts, ts);
+            this.attackUp1 = setupImage("/player/attacks/rat-axe-up-1", ts, ts);
+            this.attackUp2 = setupImage("/player/attacks/rat-axe-up-2", ts, ts);
 
             // Left attack: 2-frame animation
             this.attackLeft1 = setupImage("/player/attacks/rat-axe-left-1", ts, ts);
@@ -405,7 +405,7 @@ public class Player extends Entity {
 
     private void equipAxeSprites() {
         int ts = this.tileSize;
-        BufferedImage kapak = setupImage("/player/walking/mouse-kapak", ts, ts);
+        BufferedImage kapak = setupImage("/player/walking/rat-axe", ts, ts);
         mainCharacter = kapak;
         // down: dua frame yang sama karena tidak ada sprite jalan bawah+kapak lain
         down1 = kapak;
@@ -447,7 +447,7 @@ public class Player extends Entity {
             if (isLoudspeaker) {
                 BufferedImage jokowi =
                         setupImage(
-                                "/player/attacks/mouse-hidup-jokowi", this.tileSize, this.tileSize);
+                                "/player/attacks/rat-hidup-jokowi", this.tileSize, this.tileSize);
                 mainCharacter = jokowi;
                 down1 = jokowi;
                 down2 = jokowi;
