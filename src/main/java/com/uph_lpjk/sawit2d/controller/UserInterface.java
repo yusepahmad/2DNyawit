@@ -1,6 +1,9 @@
 package com.uph_lpjk.sawit2d.controller;
 
+import com.uph_lpjk.sawit2d.achievement.Achievement;
 import com.uph_lpjk.sawit2d.entity.Entity;
+import com.uph_lpjk.sawit2d.farm.FarmGrid;
+import com.uph_lpjk.sawit2d.farm.FarmTileType;
 import com.uph_lpjk.sawit2d.object.ObjGold;
 import com.uph_lpjk.sawit2d.utility.AssetLoader;
 
@@ -277,12 +280,12 @@ public class UserInterface {
                 break;
             case PLAY:
                 drawPlayerGold();
-                drawFarmStatus();
-                drawBanner();
+                drawOverview();
                 drawControlHint();
                 break;
             case CHARACTER:
                 drawInventory();
+                drawFarmStatus();
                 break;
             case PAUSE:
                 drawPauseScreen();
@@ -297,6 +300,9 @@ public class UserInterface {
                 drawMarketScreen();
                 break;
         }
+
+        // Banner notifikasi selalu tampil di semua state
+        drawBanner();
     }
 
     private void drawMarketScreen() {
@@ -314,7 +320,7 @@ public class UserInterface {
         g2.fillRect(0, 0, gp.getScreenWidth(), gp.getScreenHeight());
 
         int width = gp.getTileSize() * 10;
-        int height = gp.getTileSize() * 8;
+        int height = gp.getTileSize() * 9;
         int x = (gp.getScreenWidth() - width) / 2;
         int y = (gp.getScreenHeight() - height) / 2;
 
@@ -335,7 +341,12 @@ public class UserInterface {
         g2.drawString(text, tx, ty);
 
         g2.setFont(g2.getFont().deriveFont(Font.BOLD, 28F));
-        String[] options = {"Beli Bibit Sawit ($30)", "Jual Hasil Panen ($120)", "Keluar"};
+        String[] options = {
+            "Beli Bibit Sawit ($30)",
+            "Beli Loudspeaker ($1,000,000)",
+            "Jual Hasil Panen ($120)",
+            "Keluar"
+        };
         ty += gp.getTileSize();
         for (int i = 0; i < options.length; i++) {
             text = options[i];
@@ -353,7 +364,7 @@ public class UserInterface {
         g2.fillRect(0, 0, gp.getScreenWidth(), gp.getScreenHeight());
 
         int width = gp.getTileSize() * 8;
-        int height = gp.getTileSize() * 6;
+        int height = gp.getTileSize() * 7;
         int x = (gp.getScreenWidth() - width) / 2;
         int y = (gp.getScreenHeight() - height) / 2;
 
@@ -366,24 +377,42 @@ public class UserInterface {
         g2.setColor(new Color(255, 240, 200));
         g2.drawString(text, tx, ty);
 
+        g2.setFont(g2.getFont().deriveFont(Font.BOLD, 24F));
+        g2.setColor(new Color(200, 200, 200));
+        text = "Gold kamu: $" + gp.getPlayerGold();
+        tx = getXforCenteredText(text);
+        ty += gp.getTileSize();
+        g2.drawString(text, tx, ty);
+
         g2.setFont(g2.getFont().deriveFont(Font.BOLD, 28F));
         g2.setColor(Color.white);
-
         text = "Jumlah: < " + buyQty + " >";
         tx = getXforCenteredText(text);
-        ty += (int) (gp.getTileSize() * 1.5);
+        ty += (int) (gp.getTileSize() * 1.2);
         g2.drawString(text, tx, ty);
 
         int total = buyQty * 30;
+        boolean canAfford = gp.getPlayerGold() >= total;
+        g2.setColor(canAfford ? Color.white : new Color(255, 80, 80));
         text = "Total: $" + total;
         tx = getXforCenteredText(text);
         ty += gp.getTileSize();
         g2.drawString(text, tx, ty);
 
+        if (!canAfford) {
+            g2.setFont(g2.getFont().deriveFont(Font.BOLD, 20F));
+            g2.setColor(new Color(255, 80, 80));
+            text = "⚠ Gold tidak cukup!";
+            tx = getXforCenteredText(text);
+            ty += (int) (gp.getTileSize() * 0.8);
+            g2.drawString(text, tx, ty);
+        }
+
         g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 18F));
+        g2.setColor(Color.white);
         text = "[ENTER] Konfirmasi  [ESC] Batal";
         tx = getXforCenteredText(text);
-        ty += (int) (gp.getTileSize() * 1.2);
+        ty += (int) (gp.getTileSize() * 1.0);
         g2.drawString(text, tx, ty);
     }
 
@@ -656,6 +685,8 @@ public class UserInterface {
             pauseMain();
         } else if (subState == 1) {
             pauseSettings();
+        } else if (subState == 2) {
+            drawAchievementScreen();
         }
     }
 
@@ -664,7 +695,7 @@ public class UserInterface {
         g2.fillRect(0, 0, gp.getScreenWidth(), gp.getScreenHeight());
 
         int width = gp.getTileSize() * 8;
-        int height = gp.getTileSize() * 9;
+        int height = gp.getTileSize() * 10;
         int x = (gp.getScreenWidth() - width) / 2;
         int y = (gp.getScreenHeight() - height) / 2;
 
@@ -680,11 +711,13 @@ public class UserInterface {
         g2.setFont(g2.getFont().deriveFont(Font.BOLD, 28F));
         g2.setColor(Color.white);
 
-        String[] options = {"Resume", "Settings", "Reload Game", "Game Menu", "Exit Game"};
+        String[] options = {
+            "Resume", "Settings", "Achievements", "Reload Game", "Game Menu", "Exit Game"
+        };
         for (int i = 0; i < options.length; i++) {
             text = options[i];
             tx = getXforCenteredText(text);
-            ty += gp.getTileSize() * 1.2;
+            ty += gp.getTileSize() * 1.1;
             g2.drawString(text, tx, ty);
             if (commandNum == i) {
                 g2.drawString(">", tx - 30, ty);
@@ -697,7 +730,7 @@ public class UserInterface {
         g2.fillRect(0, 0, gp.getScreenWidth(), gp.getScreenHeight());
 
         int width = gp.getTileSize() * 10;
-        int height = gp.getTileSize() * 8;
+        int height = gp.getTileSize() * 9;
         int x = (gp.getScreenWidth() - width) / 2;
         int y = (gp.getScreenHeight() - height) / 2;
 
@@ -713,7 +746,7 @@ public class UserInterface {
         g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 24F));
         g2.setColor(Color.white);
 
-        // Music Volume
+        // Music Volume (commandNum 0)
         text = "Music Volume";
         tx = x + gp.getTileSize();
         ty += (int) (gp.getTileSize() * 1.5);
@@ -721,19 +754,28 @@ public class UserInterface {
         drawVolumeBar(x + width - gp.getTileSize() * 4, ty - 20, gp.music.getVolumeScale());
         if (commandNum == 0) g2.drawString(">", tx - 25, ty);
 
-        // SE Volume
+        // SE Volume (commandNum 1)
         text = "SE Volume";
         ty += gp.getTileSize();
         g2.drawString(text, tx, ty);
         drawVolumeBar(x + width - gp.getTileSize() * 4, ty - 20, gp.se.getVolumeScale());
         if (commandNum == 1) g2.drawString(">", tx - 25, ty);
 
-        // Back
+        // Window Size (commandNum 2)
+        text = "Window Size";
+        ty += gp.getTileSize();
+        g2.drawString(text, tx, ty);
+        String scaleLabel = "< " + GamePanel.WINDOW_SCALE_LABELS[gp.getWindowScaleIndex()] + " >";
+        int labelX = x + width - gp.getTileSize() * 4;
+        g2.drawString(scaleLabel, labelX, ty);
+        if (commandNum == 2) g2.drawString(">", tx - 25, ty);
+
+        // Back (commandNum 3)
         text = "Back";
         tx = getXforCenteredText(text);
         ty += (int) (gp.getTileSize() * 1.5);
         g2.drawString(text, tx, ty);
-        if (commandNum == 2) g2.drawString(">", tx - 25, ty);
+        if (commandNum == 3) g2.drawString(">", tx - 25, ty);
     }
 
     private void drawVolumeBar(int x, int y, int scale) {
@@ -747,6 +789,96 @@ public class UserInterface {
 
         int volumeWidth = (width / 5) * scale;
         g2.fillRect(x, y, volumeWidth, height);
+    }
+
+    private void drawAchievementScreen() {
+        int ts = gp.getTileSize();
+        java.util.List<Achievement> all = new java.util.ArrayList<>(gp.getAchievements().getAll());
+        int total = all.size();
+        int unlocked = (int) all.stream().filter(Achievement::isUnlocked).count();
+
+        // Panel sizing: tall enough for all entries
+        int lineH = 36;
+        int headerH = ts + 20;
+        int footerH = ts;
+        int width = ts * 13;
+        int height = headerH + total * lineH + footerH + 24;
+        int x = (gp.getScreenWidth() - width) / 2;
+        int y = (gp.getScreenHeight() - height) / 2;
+
+        // Dim background
+        g2.setColor(new Color(0, 0, 0, 180));
+        g2.fillRect(0, 0, gp.getScreenWidth(), gp.getScreenHeight());
+        drawSubWindow(x, y, width, height);
+
+        // Title + progress fraction
+        g2.setFont(g2.getFont().deriveFont(Font.BOLD, 20F));
+        g2.setColor(new Color(255, 240, 200));
+        String title = "ACHIEVEMENTS  " + unlocked + "/" + total;
+        g2.drawString(title, getXforCenteredText(title), y + 28);
+
+        // Divider
+        g2.setColor(new Color(180, 150, 80, 160));
+        g2.drawLine(x + 16, y + 36, x + width - 16, y + 36);
+
+        // Progress bar
+        int barW = width - 32;
+        int barH = 6;
+        int barX = x + 16;
+        int barY = y + 40;
+        g2.setColor(new Color(50, 50, 50));
+        g2.fillRoundRect(barX, barY, barW, barH, 4, 4);
+        int filled = total > 0 ? (barW * unlocked / total) : 0;
+        g2.setColor(new Color(100, 210, 100));
+        if (filled > 0) g2.fillRoundRect(barX, barY, filled, barH, 4, 4);
+
+        // Achievement list
+        int textX = x + 16;
+        int textY = y + headerH + 20;
+        g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 14F));
+
+        for (Achievement a : all) {
+            if (a.isUnlocked()) {
+                // Badge terbuka
+                g2.setColor(new Color(80, 180, 80));
+                g2.fillRoundRect(textX, textY - 13, 18, 16, 4, 4);
+                g2.setColor(new Color(220, 255, 220));
+                g2.drawString("V", textX + 4, textY - 1);
+
+                // Nama achievement (bold)
+                g2.setFont(g2.getFont().deriveFont(Font.BOLD, 14F));
+                g2.setColor(new Color(130, 230, 130));
+                g2.drawString(a.name, textX + 24, textY - 1);
+
+                // Deskripsi (italic kecil)
+                g2.setFont(g2.getFont().deriveFont(Font.ITALIC, 12F));
+                g2.setColor(new Color(180, 210, 180));
+                g2.drawString(a.description, textX + 24, textY + 14);
+            } else {
+                // Badge terkunci
+                g2.setColor(new Color(80, 80, 80));
+                g2.fillRoundRect(textX, textY - 13, 18, 16, 4, 4);
+                g2.setColor(new Color(160, 160, 160));
+                g2.drawString("?", textX + 5, textY - 1);
+
+                // Placeholder nama
+                g2.setFont(g2.getFont().deriveFont(Font.BOLD, 14F));
+                g2.setColor(new Color(130, 130, 130));
+                g2.drawString("??? (Terkunci)", textX + 24, textY - 1);
+
+                // Clue
+                g2.setFont(g2.getFont().deriveFont(Font.ITALIC, 12F));
+                g2.setColor(new Color(180, 165, 100));
+                g2.drawString("Petunjuk: " + a.clue, textX + 24, textY + 14);
+            }
+            textY += lineH;
+        }
+
+        // Footer hint
+        g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 14F));
+        g2.setColor(new Color(160, 160, 160));
+        String hint = "[ESC] Kembali";
+        g2.drawString(hint, getXforCenteredText(hint), y + height - 10);
     }
 
     private void drawGameOverScreen() {
@@ -859,9 +991,43 @@ public class UserInterface {
         this.g2.setComposite(oldComposite);
     }
 
-    private void drawFarmStatus() {
+    private void drawOverview() {
+        FarmGrid grid = this.gp.getFarmSystem().getFarmGrid();
+
         int boxX = this.gp.getTileSize() / 2;
         int boxY = this.gp.getTileSize() / 2;
+        int boxW = this.gp.getTileSize() * 5;
+        int boxH = this.gp.getTileSize() * 4;
+
+        this.g2.setColor(new Color(42, 32, 24, 200));
+        this.g2.fillRoundRect(boxX, boxY, boxW, boxH, 12, 12);
+        this.g2.setColor(new Color(238, 204, 126, 220));
+        this.g2.drawRoundRect(boxX, boxY, boxW, boxH, 12, 12);
+
+        this.g2.setFont(this.g2.getFont().deriveFont(Font.BOLD, 15F));
+        this.g2.setColor(new Color(250, 230, 190));
+
+        int textX = boxX + 12;
+        int textY = boxY + 22;
+        int lineH = 18;
+
+        this.g2.drawString("=== Overview ===", textX, textY);
+        this.g2.drawString(
+                "Total Panen : " + this.gp.getFarmState().getTotalHarvested() + " TBS",
+                textX,
+                textY + lineH);
+        this.g2.drawString(
+                "Total Jual  : " + this.gp.getFarmState().getTotalSold() + " TBS",
+                textX,
+                textY + lineH * 2);
+        this.g2.drawString(
+                "Lahan Aktif : " + grid.countByType(FarmTileType.SAWIT), textX, textY + lineH * 3);
+        this.g2.drawString("Siap Panen  : " + grid.countReadyTiles(), textX, textY + lineH * 4);
+    }
+
+    private void drawFarmStatus() {
+        int boxX = this.gp.getTileSize() / 2;
+        int boxY = this.gp.getTileSize();
         int boxW = this.gp.getTileSize() * 6;
         int boxH = this.gp.getTileSize() * 7;
 

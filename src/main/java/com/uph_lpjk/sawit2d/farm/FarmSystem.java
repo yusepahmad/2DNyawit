@@ -226,6 +226,7 @@ public class FarmSystem {
         int income = economySystem.collectIncome(toSell, weatherMultiplier);
 
         if (removePalmFruitFromPlayer(toSell)) {
+            gameState.addTotalSold(toSell);
             gp.setPlayerGold(income);
             gp.playSoundEffect(1);
             gameState.setLastNotification("Truk pengangkut datang, " + toSell + " TBS terjual.");
@@ -291,8 +292,22 @@ public class FarmSystem {
     }
 
     private void spawnFirefighter(Point tilePos, FarmTile tile, FarmBurnHandledType handledType) {
-        int worldX = (tilePos.x + FARM_ORIGIN_COL) * gp.getTileSize();
-        int worldY = (tilePos.y + FARM_ORIGIN_ROW) * gp.getTileSize();
+        // Cari tile kosong di sekitar kebakaran untuk spawn gajah (bukan tepat di atas api).
+        int[][] offsets = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+        int spawnCol = tilePos.x;
+        int spawnRow = tilePos.y;
+        for (int[] off : offsets) {
+            int nc = tilePos.x + off[0];
+            int nr = tilePos.y + off[1];
+            FarmTile neighbor = farmGrid.getTile(nr, nc);
+            if (neighbor != null && !neighbor.isBurned()) {
+                spawnCol = nc;
+                spawnRow = nr;
+                break;
+            }
+        }
+        int worldX = (spawnCol + FARM_ORIGIN_COL) * gp.getTileSize();
+        int worldY = (spawnRow + FARM_ORIGIN_ROW) * gp.getTileSize();
 
         tile.markBurnHandled(handledType);
 
@@ -448,6 +463,8 @@ public class FarmSystem {
     }
 
     private void addPalmFruitToPlayer(int amount) {
+        gameState.addTotalHarvested(amount);
+        gp.getAchievements().onHarvest();
         com.uph_lpjk.sawit2d.object.ObjPalmFruit fruit =
                 new com.uph_lpjk.sawit2d.object.ObjPalmFruit(gp);
         fruit.amount = amount;
@@ -704,6 +721,7 @@ public class FarmSystem {
                 return;
             }
             gp.setPlayerGold(-MANUAL_FIRE_HANDLE_COST);
+            gp.getAchievements().onFireHandled();
             spawnFirefighter(tilePos, tile, FarmBurnHandledType.MANUAL);
             gp.addUIMessage(
                     "Petugas pemadam dipanggil ke petak "

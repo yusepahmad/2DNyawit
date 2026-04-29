@@ -51,7 +51,6 @@ public class Player extends Entity {
     }
 
     private void setItems() {
-        this.inventory.add(currentWeapon);
         this.inventory.add(new ObjAxe(this.gp));
     }
 
@@ -139,8 +138,8 @@ public class Player extends Entity {
         life = maxLife;
         gold = 1000;
         strength = 1;
-        currentWeapon = new ObjAxe(gp);
-        attack = getAttackCurrentWeapon();
+        currentWeapon = null;
+        attack = 0;
     }
 
     public void resetToDefaultValues() {
@@ -148,64 +147,46 @@ public class Player extends Entity {
     }
 
     private int getAttackCurrentWeapon() {
+        if (currentWeapon == null) return attack = 0;
         attackArea = currentWeapon.attackArea;
         return attack = strength * currentWeapon.attackValue;
     }
 
     private void getPlayerImage() {
         mainCharacter = setupImage("/player/walking/rat", this.tileSize, this.tileSize);
-        up1 = setupImage("/player/walking/rat-up", this.tileSize, this.tileSize);
+        // Use rat-back for up (walking away) and rat-up for second frame animation
+        up1 = setupImage("/player/walking/rat-back", this.tileSize, this.tileSize);
         up2 = setupImage("/player/walking/rat-up", this.tileSize, this.tileSize);
-        down1 = setupImage("/player/walking/rat-down", this.tileSize, this.tileSize);
+        // Use rat (front-facing) and rat-down for alternating down frames
+        down1 = setupImage("/player/walking/rat", this.tileSize, this.tileSize);
         down2 = setupImage("/player/walking/rat-down", this.tileSize, this.tileSize);
-        left1 = setupImage("/player/walking/rat-run-to-left", this.tileSize, this.tileSize);
+        // Use proper left/right directional sprites for side movement
+        left1 = setupImage("/player/walking/rat-left", this.tileSize, this.tileSize);
         left2 = setupImage("/player/walking/rat-run-to-left", this.tileSize, this.tileSize);
-        right1 = setupImage("/player/walking/rat-run-to-right", this.tileSize, this.tileSize);
+        right1 = setupImage("/player/walking/rat-right", this.tileSize, this.tileSize);
         right2 = setupImage("/player/walking/rat-run-to-right", this.tileSize, this.tileSize);
     }
 
     private void getPlayerAttackImage() {
+        if (currentWeapon == null) return;
         if (currentWeapon.getType() == Type.AXE || currentWeapon.getType() == Type.EQUIPMENT) {
-            this.attackDown1 =
-                    setupImage(
-                            "/player/attacks/mouse_kapak_atas",
-                            this.gp.getTileSize(),
-                            this.gp.getTileSize() * 2);
-            this.attackDown2 =
-                    setupImage(
-                            "/player/attacks/mouse_kapak_bawah",
-                            this.gp.getTileSize(),
-                            this.gp.getTileSize() * 2);
-            this.attackUp1 =
-                    setupImage(
-                            "/player/attacks/boy_axe_up_1",
-                            this.gp.getTileSize(),
-                            this.gp.getTileSize() * 2);
-            this.attackUp2 =
-                    setupImage(
-                            "/player/attacks/boy_axe_up_2",
-                            this.gp.getTileSize(),
-                            this.gp.getTileSize() * 2);
-            this.attackRight1 =
-                    setupImage(
-                            "/player/attacks/rat-axe-right-1",
-                            this.gp.getTileSize() * 2,
-                            this.gp.getTileSize());
-            this.attackRight2 =
-                    setupImage(
-                            "/player/attacks/rat-axe-right-2",
-                            this.gp.getTileSize() * 2,
-                            this.gp.getTileSize());
-            this.attackLeft1 =
-                    setupImage(
-                            "/player/attacks/rat-axe-left-1",
-                            this.gp.getTileSize() * 2,
-                            this.gp.getTileSize());
-            this.attackLeft2 =
-                    setupImage(
-                            "/player/attacks/rat-axe-left-2",
-                            this.gp.getTileSize() * 2,
-                            this.gp.getTileSize());
+            int ts = this.gp.getTileSize();
+
+            // Down attack: mouse_kapak_bawah.png
+            this.attackDown1 = setupImage("/player/attacks/mouse_kapak_bawah", ts, ts);
+            this.attackDown2 = setupImage("/player/attacks/mouse_kapak_bawah", ts, ts);
+
+            // Up attack: rat_axe_up.png
+            this.attackUp1 = setupImage("/player/attacks/rat_axe_up", ts, ts);
+            this.attackUp2 = setupImage("/player/attacks/rat_axe_up", ts, ts);
+
+            // Left attack: 2-frame animation
+            this.attackLeft1 = setupImage("/player/attacks/rat-axe-left-1", ts, ts);
+            this.attackLeft2 = setupImage("/player/attacks/rat-axe-left-2", ts, ts);
+
+            // Right attack: 2-frame animation
+            this.attackRight1 = setupImage("/player/attacks/rat-axe-right-1", ts, ts);
+            this.attackRight2 = setupImage("/player/attacks/rat-axe-right-2", ts, ts);
         }
     }
 
@@ -263,7 +244,9 @@ public class Player extends Entity {
 
             // Logic for Attacking (Branch A) vs Interacting (Branch B)
             // If enter is pressed and we are NOT interacting with a Farm Plot, trigger attack
-            if (this.keyH.getActionPressed() == true && this.attackCanceled == false) {
+            if (this.keyH.getActionPressed() == true
+                    && this.attackCanceled == false
+                    && this.currentWeapon != null) {
                 this.gp.playSoundEffect(7);
                 this.attacking = true;
                 this.spriteCounter = 0;
@@ -353,11 +336,22 @@ public class Player extends Entity {
         }
     }
 
-    @Override
+    private boolean isNearMarket() {
+        int playerCol = (worldX + this.tileSize / 2) / this.tileSize;
+        int playerRow = (worldY + this.tileSize / 2) / this.tileSize;
+        return Math.abs(playerCol - 10) <= 6 && Math.abs(playerRow - 3) <= 6;
+    }
+
     public void draw(Graphics2D g2) {
         BufferedImage image = null;
         int tempScreenX = worldX - gp.getCameraX();
         int tempScreenY = worldY - gp.getCameraY();
+
+        if (!this.attacking && isNearMarket()) {
+            g2.drawImage(mainCharacter, tempScreenX, tempScreenY, null);
+            g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1F));
+            return;
+        }
 
         switch (getDirection()) {
             case "up":
@@ -366,7 +360,6 @@ public class Player extends Entity {
                     if (this.spriteNum == 2) image = up2;
                 }
                 if (this.attacking == true) {
-                    tempScreenY = tempScreenY - this.tileSize;
                     if (this.spriteNum == 1) image = attackUp1;
                     if (this.spriteNum == 2) image = attackUp2;
                 }
@@ -387,7 +380,6 @@ public class Player extends Entity {
                     if (this.spriteNum == 2) image = left2;
                 }
                 if (this.attacking == true) {
-                    tempScreenX = tempScreenX - this.tileSize;
                     if (this.spriteNum == 1) image = attackLeft1;
                     if (this.spriteNum == 2) image = attackLeft2;
                 }
@@ -411,19 +403,70 @@ public class Player extends Entity {
         g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1F));
     }
 
+    private void equipAxeSprites() {
+        int ts = this.tileSize;
+        BufferedImage kapak = setupImage("/player/walking/mouse-kapak", ts, ts);
+        mainCharacter = kapak;
+        // down: dua frame yang sama karena tidak ada sprite jalan bawah+kapak lain
+        down1 = kapak;
+        down2 = kapak;
+        // up: walking atas biasa (sudah smooth)
+        up1 = setupImage("/player/walking/rat-back", ts, ts);
+        up2 = setupImage("/player/walking/rat-up", ts, ts);
+        // kiri: frame1=bawa kapak sambil jalan, frame2=langkah lari biasa → smooth walk
+        left1 = setupImage("/player/attacks/rat-axe-left-2", ts, ts);
+        left2 = setupImage("/player/attacks/rat-axe-left-2", ts, ts);
+        // kanan: frame1=bawa kapak sambil jalan, frame2=langkah lari biasa → smooth walk
+        right1 = setupImage("/player/attacks/rat-axe-right-2", ts, ts);
+        right2 = setupImage("/player/attacks/rat-axe-right-2", ts, ts);
+    }
+
     public void selectItem() {
         Entity selectedItem = this.gp.getUISelectedItem();
-        if (selectedItem != null) {
-            if (selectedItem.getType() == Entity.Type.EQUIPMENT
-                    || selectedItem.getType() == Entity.Type.AXE) {
-                this.currentWeapon = selectedItem;
-                this.attack = getAttackCurrentWeapon();
-                getPlayerAttackImage();
+        if (selectedItem == null) return;
+
+        if (selectedItem.getType() == Entity.Type.EQUIPMENT
+                || selectedItem.getType() == Entity.Type.AXE) {
+
+            // Toggle unequip: klik item yang sudah equipped → lepas
+            if (this.currentWeapon == selectedItem) {
+                this.currentWeapon = null;
+                this.attack = 0;
+                this.gp.setLoudspeakerEquipped(false);
+                getPlayerImage();
+                return;
             }
-            if (selectedItem.getType() == Entity.Type.CONSUMABLE) {
-                selectedItem.use(this);
-                this.inventory.remove(selectedItem);
+
+            this.currentWeapon = selectedItem;
+            this.attack = getAttackCurrentWeapon();
+            getPlayerAttackImage();
+
+            boolean isLoudspeaker = selectedItem.getName().equals("Loudspeaker");
+            this.gp.setLoudspeakerEquipped(isLoudspeaker);
+
+            if (isLoudspeaker) {
+                BufferedImage jokowi =
+                        setupImage(
+                                "/player/attacks/mouse-hidup-jokowi", this.tileSize, this.tileSize);
+                mainCharacter = jokowi;
+                down1 = jokowi;
+                down2 = jokowi;
+                up1 = jokowi;
+                up2 = jokowi;
+                left1 = jokowi;
+                left2 = jokowi;
+                right1 = jokowi;
+                right2 = jokowi;
+            } else if (selectedItem.getType() == Entity.Type.AXE) {
+                equipAxeSprites();
+            } else {
+                getPlayerImage();
             }
+        }
+
+        if (selectedItem.getType() == Entity.Type.CONSUMABLE) {
+            selectedItem.use(this);
+            this.inventory.remove(selectedItem);
         }
     }
 
