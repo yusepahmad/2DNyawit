@@ -88,6 +88,7 @@ public class GamePanel extends JPanel implements Runnable {
 
     // GAME STATE
     public enum State {
+        LOADING,
         TITLE,
         PLAY,
         PAUSE,
@@ -98,6 +99,8 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     private State gameState;
+    private float loadingProgress = 0f;
+    private int loadingCounter = 0;
 
     public GamePanel() {
         this.setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
@@ -599,7 +602,9 @@ public class GamePanel extends JPanel implements Runnable {
         this.aSetter.setObject();
         this.aSetter.setInteractiveTile();
         if (this.player.getGold() == 0) this.player.setGold(1000);
-        this.gameState = GamePanel.State.TITLE;
+        this.gameState = GamePanel.State.LOADING;
+        this.loadingProgress = 0f;
+        this.loadingCounter = 0;
         tempScreen = new BufferedImage(SCREEN_WIDTH, SCREEN_HEIGHT, BufferedImage.TYPE_INT_ARGB);
         g2 = (Graphics2D) tempScreen.getGraphics();
         // Wire achievement manager to UI so it can push banners
@@ -659,7 +664,22 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void update() {
+        if (this.gameState == State.LOADING) {
+            this.loadingProgress += 0.008f;
+            if (this.loadingProgress >= 1.0f) {
+                this.loadingProgress = 1.0f;
+                this.loadingCounter++;
+                if (this.loadingCounter > 40) {
+                    this.gameState = State.TITLE;
+                }
+            }
+            return;
+        }
+
         if (this.gameState == GamePanel.State.PLAY) {
+            if (this.ui.isDialogActive()) {
+                return;
+            }
             // ACHIEVEMENTS: survival timer + gold check (every 60 frames ~= 1 sec)
             this.achievements.startSurvivalTimer();
             this.achievements.checkSurvivalTimer();
@@ -821,5 +841,9 @@ public class GamePanel extends JPanel implements Runnable {
     public void playSoundEffect(int i) {
         this.se.setFile(i);
         this.se.play();
+    }
+
+    public float getLoadingProgress() {
+        return this.loadingProgress;
     }
 }
