@@ -18,7 +18,9 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.function.Consumer;
 
 public class UserInterface {
@@ -39,15 +41,12 @@ public class UserInterface {
         private final String detail;
         private final BufferedImage icon;
         private int age;
-        private final int duration;
 
-        private Banner(
-                BannerTone tone, String title, String detail, int duration, BufferedImage icon) {
+        private Banner(BannerTone tone, String title, String detail, BufferedImage icon) {
             this.tone = tone;
             this.title = title;
             this.detail = detail;
             this.icon = icon;
-            this.duration = duration;
             this.age = 0;
         }
     }
@@ -69,6 +68,11 @@ public class UserInterface {
     private Font maruMonica, purisaBold;
 
     private Banner activeBanner;
+    private final Queue<Banner> bannerQueue = new LinkedList<>();
+    private final BufferedImage managerIcon;
+    private final BufferedImage loadingRatRun;
+    private final BufferedImage loadingRatIdle;
+    private final BufferedImage loadingSawit;
 
     // EVENT SYSTEM
     private boolean eventActive = false;
@@ -139,6 +143,10 @@ public class UserInterface {
         this.economyIcon = assetLoader.loadImage(28, 28, "/objects/gold/goldie");
         this.gameOverIcon = assetLoader.loadImage(28, 28, "/tile/after-kebakaran-2");
         this.firefighterIcon = assetLoader.loadImage(48, 48, "/player/elephant/elephant-front");
+        this.managerIcon = assetLoader.loadImage(144, 144, "/player/attacks/rat-tracing.png");
+        this.loadingRatRun = assetLoader.loadImage(48, 48, "/player/walking/rat-run-to-right");
+        this.loadingRatIdle = assetLoader.loadImage(48, 48, "/player/walking/rat");
+        this.loadingSawit = assetLoader.loadImage(48, 48, "/sawit/sawit-panen");
     }
 
     public void setupEvent(
@@ -204,11 +212,33 @@ public class UserInterface {
     }
 
     public void pushBanner(BannerTone tone, String title, String detail) {
-        this.activeBanner = createBanner(tone, title, detail);
+        this.bannerQueue.offer(createBanner(tone, title, detail));
+        if (this.activeBanner == null) {
+            this.activeBanner = this.bannerQueue.poll();
+        }
     }
 
     public void resetNotifications() {
         this.activeBanner = null;
+        this.bannerQueue.clear();
+    }
+
+    public void interactDialog() {
+        if (this.activeBanner != null) {
+            int displayedChars = this.activeBanner.age / 2;
+            if (displayedChars < this.activeBanner.detail.length()) {
+                this.activeBanner.age = this.activeBanner.detail.length() * 2;
+            } else {
+                this.activeBanner = this.bannerQueue.poll();
+                if (this.activeBanner != null) {
+                    this.activeBanner.age = 0;
+                }
+            }
+        }
+    }
+
+    public boolean isDialogActive() {
+        return this.activeBanner != null;
     }
 
     private Banner resolveBannerFromText(String text) {
@@ -241,7 +271,7 @@ public class UserInterface {
     }
 
     private Banner createBanner(BannerTone tone, String title, String detail) {
-        return new Banner(tone, title, detail, 240, resolveBannerIcon(tone));
+        return new Banner(tone, title, detail, resolveBannerIcon(tone));
     }
 
     private BufferedImage resolveBannerIcon(BannerTone tone) {
@@ -275,6 +305,9 @@ public class UserInterface {
         this.g2.setColor(Color.white);
 
         switch (this.gp.getGameState()) {
+            case LOADING:
+                drawLoadingScreen();
+                break;
             case TITLE:
                 drawTitleScreen();
                 break;
@@ -313,6 +346,47 @@ public class UserInterface {
         } else if (subState == 2) {
             marketSellQty();
         }
+    }
+
+    private void drawLoadingScreen() {
+        // BACKGROUND
+        this.g2.setColor(new Color(20, 20, 20));
+        this.g2.fillRect(0, 0, this.gp.getScreenWidth(), this.gp.getScreenHeight());
+
+        int barW = 500;
+        int barH = 40;
+        int barX = (this.gp.getScreenWidth() - barW) / 2;
+        int barY = (this.gp.getScreenHeight() - barH) / 2 + 50;
+
+        float progress = this.gp.getLoadingProgress();
+
+        // BORDER
+        this.g2.setColor(new Color(200, 200, 200));
+        this.g2.setStroke(new BasicStroke(3));
+        this.g2.drawRoundRect(barX, barY, barW, barH, 25, 25);
+
+        // PROGRESS FILL (GREEN TRANSPARENT)
+        this.g2.setColor(new Color(50, 200, 50, 100));
+        int fillW = (int) (barW * progress);
+        if (fillW > 0) {
+            this.g2.fillRoundRect(barX, barY, fillW, barH, 25, 25);
+        }
+
+        // SAWIT PANEN AT THE END
+        this.g2.drawImage(this.loadingSawit, barX + barW - 24, barY - 15, 48, 48, null);
+
+        // RAT
+        int ratX = barX + (int) (barW * progress) - 24;
+        int ratY = barY - 15;
+        BufferedImage ratImg = (progress < 1.0f) ? this.loadingRatRun : this.loadingRatIdle;
+        this.g2.drawImage(ratImg, ratX, ratY, 48, 48, null);
+
+        // LOADING TEXT
+        this.g2.setFont(this.g2.getFont().deriveFont(Font.BOLD, 24F));
+        this.g2.setColor(Color.WHITE);
+        String text = "MEMUAT LAHAN...";
+        int textX = getXforCenteredText(text);
+        this.g2.drawString(text, textX, barY - 40);
     }
 
     private void marketMain() {
@@ -923,72 +997,62 @@ public class UserInterface {
             return;
         }
 
+        this.g2.setColor(new Color(0, 0, 0, 100));
+        this.g2.fillRect(0, 0, this.gp.getScreenWidth(), this.gp.getScreenHeight());
+
         this.activeBanner.age++;
-        if (this.activeBanner.age > this.activeBanner.duration) {
-            this.activeBanner = null;
-            return;
+
+        int boxW = this.gp.getScreenWidth() - 100;
+        int boxH = this.gp.getTileSize() * 3 + 20;
+        int boxX = 50;
+        int boxY = this.gp.getScreenHeight() - boxH - 20;
+
+        int portraitSize = 220;
+        int portraitX = boxX - 40;
+        int portraitY = boxY + boxH - portraitSize + 20;
+
+        int bubbleX = boxX + 140;
+        int bubbleY = boxY;
+        int bubbleW = boxW - 140;
+        int bubbleH = boxH;
+
+        this.g2.setColor(new Color(245, 235, 210, 245));
+        this.g2.fillRoundRect(bubbleX, bubbleY, bubbleW, bubbleH, 20, 20);
+
+        this.g2.setColor(new Color(200, 190, 170, 255));
+        this.g2.setStroke(new BasicStroke(4));
+        this.g2.drawRoundRect(bubbleX, bubbleY, bubbleW, bubbleH, 20, 20);
+
+        if (this.managerIcon != null) {
+            this.g2.drawImage(
+                    this.managerIcon, portraitX, portraitY, portraitSize, portraitSize, null);
         }
 
-        int bannerW = this.gp.getTileSize() * 10;
-        int detailMaxWidth = bannerW - 92;
-        List<String> detailLines = wrapText(this.activeBanner.detail, detailMaxWidth);
-        int bannerH = Math.max(this.gp.getTileSize() + 16, 62 + (detailLines.size() * 18));
-        int bannerX = (this.gp.getScreenWidth() - bannerW) / 2;
-        int bannerY = this.gp.getScreenHeight() - bannerH - (this.gp.getTileSize() / 2);
-
-        float alpha = 1.0f;
-        if (this.activeBanner.age < 24) {
-            alpha = this.activeBanner.age / 24.0f;
-        } else if (this.activeBanner.duration - this.activeBanner.age < 24) {
-            alpha = Math.max(0.0f, (this.activeBanner.duration - this.activeBanner.age) / 24.0f);
+        int textX = bubbleX + 32;
+        int textY = bubbleY + 32;
+        this.g2.setColor(Color.BLACK);
+        this.g2.setFont(this.g2.getFont().deriveFont(Font.PLAIN, 22F));
+        int displayedChars = this.activeBanner.age / 2;
+        if (displayedChars > this.activeBanner.detail.length()) {
+            displayedChars = this.activeBanner.detail.length();
         }
 
-        Color bg = new Color(44, 34, 26);
-        Color accent = new Color(214, 166, 82);
+        String displayedText = this.activeBanner.detail.substring(0, displayedChars);
+        List<String> detailLines = wrapText(displayedText, bubbleW - 48);
 
-        java.awt.Composite oldComposite = this.g2.getComposite();
-        this.g2.setComposite(
-                java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, alpha));
-        this.g2.setColor(new Color(bg.getRed(), bg.getGreen(), bg.getBlue(), 215));
-        this.g2.fillRoundRect(bannerX, bannerY, bannerW, bannerH, 22, 22);
-
-        this.g2.setColor(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 220));
-        this.g2.fillRoundRect(bannerX, bannerY, 12, bannerH, 22, 22);
-
-        this.g2.setColor(new Color(252, 220, 160, 120));
-        this.g2.drawRoundRect(bannerX, bannerY, bannerW, bannerH, 18, 18);
-
-        int iconX = bannerX + 24;
-        int iconY = bannerY + 14;
-
-        this.g2.setColor(new Color(255, 230, 170, 30));
-        this.g2.fillRoundRect(iconX - 6, iconY - 4, 36, 36, 10, 10);
-        if (this.activeBanner.icon != null) {
-            this.g2.drawImage(this.activeBanner.icon, iconX, iconY, 24, 24, null);
-        }
-
-        this.g2.setFont(this.g2.getFont().deriveFont(Font.BOLD, 21F));
-        this.g2.setColor(new Color(255, 240, 200));
-        this.g2.drawString(this.activeBanner.title, bannerX + 64, bannerY + 28);
-
-        this.g2.setFont(this.g2.getFont().deriveFont(Font.PLAIN, 15F));
-        this.g2.setColor(new Color(245, 220, 180));
-        int detailY = bannerY + 49;
+        int detailY = bubbleY + 48;
         for (String line : detailLines) {
-            this.g2.drawString(line, bannerX + 64, detailY);
-            detailY += 18;
+            this.g2.drawString(line, textX, detailY);
+            detailY += 24;
         }
 
-        int barW =
-                (int)
-                        ((bannerW - 24)
-                                * (1.0
-                                        - (double) this.activeBanner.age
-                                                / this.activeBanner.duration));
-        this.g2.setColor(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 220));
-        this.g2.fillRect(bannerX + 12, bannerY + bannerH - 8, Math.max(0, barW), 4);
-
-        this.g2.setComposite(oldComposite);
+        if (displayedChars == this.activeBanner.detail.length()) {
+            if (this.activeBanner.age % 60 < 30) {
+                this.g2.setFont(this.g2.getFont().deriveFont(Font.BOLD, 14F));
+                this.g2.drawString(
+                        "[ENTER] Lanjut", bubbleX + bubbleW - 110, bubbleY + bubbleH - 15);
+            }
+        }
     }
 
     private void drawOverview() {

@@ -250,12 +250,25 @@ public class KeyHandler implements KeyListener {
                 this.gp.getAchievements().resetAll();
                 this.gp.setGameState(GamePanel.State.PLAY);
                 gp.playMusic(0);
+                this.gp.addUIMessage(
+                        "Halo bos! Kenalin, saya manajer lahan baru di sini. Jas udah rapi, sepatu udah kinclong, tinggal nunggu instruksi bos buat nanem aja nih!");
             }
             if (this.gp.getUICommandNum() == 2) System.exit(0);
         }
     }
 
     private void playState(int code) {
+        if (this.gp.getUserInterface().isDialogActive()) {
+            if (code == KeyEvent.VK_ENTER || code == KeyEvent.VK_E || code == KeyEvent.VK_SPACE) {
+                this.gp.getUserInterface().interactDialog();
+                this.gp.playSoundEffect(9);
+                this.enterPressed = false;
+                this.actionPressed = false;
+                this.actionKeyPressed = false;
+            }
+            return;
+        }
+
         if (code == KeyEvent.VK_W) this.upPressed = true;
         if (code == KeyEvent.VK_S) this.downPressed = true;
         if (code == KeyEvent.VK_A) this.leftPressed = true;
