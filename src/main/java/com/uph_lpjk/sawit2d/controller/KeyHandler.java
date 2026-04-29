@@ -96,6 +96,14 @@ public class KeyHandler implements KeyListener {
     @Override
     public void keyPressed(KeyEvent e) {
         int code = e.getKeyCode();
+
+        // Space menutup notifikasi di state mana pun tanpa mengganggu tombol lain
+        if (code == KeyEvent.VK_SPACE && this.gp.getUserInterface().isDialogActive()) {
+            this.gp.getUserInterface().interactDialog();
+            this.gp.playSoundEffect(9);
+            return;
+        }
+
         switch (this.gp.getGameState()) {
             case TITLE:
                 titleState(code);
@@ -259,7 +267,7 @@ public class KeyHandler implements KeyListener {
 
     private void playState(int code) {
         if (this.gp.getUserInterface().isDialogActive()) {
-            if (code == KeyEvent.VK_ENTER || code == KeyEvent.VK_E || code == KeyEvent.VK_SPACE) {
+            if (code == KeyEvent.VK_E) {
                 this.gp.getUserInterface().interactDialog();
                 this.gp.playSoundEffect(9);
                 this.enterPressed = false;

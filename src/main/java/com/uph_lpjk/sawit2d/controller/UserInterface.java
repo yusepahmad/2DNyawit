@@ -68,8 +68,16 @@ public class UserInterface {
     private Graphics2D g2;
     private Font maruMonica, purisaBold;
 
+    private static final int BANNER_HOLD_FRAMES = 120; // 2 detik setelah teks selesai
+
     private Banner activeBanner;
     private final Queue<Banner> bannerQueue = new LinkedList<>();
+
+    // SIMPLE MESSAGE SYSTEM (Non-intrusive)
+    private final List<String> messageList = new ArrayList<>();
+    private final List<Integer> messageCounter = new ArrayList<>();
+    private static final int MAX_MESSAGES = 5;
+
     private final BufferedImage managerIcon;
     private final BufferedImage titleCharacterIcon;
     private final BufferedImage loadingRatRun;
@@ -208,8 +216,15 @@ public class UserInterface {
     }
 
     public void addMessage(String text) {
+        if (text == null || text.isEmpty()) return;
+
         Banner banner = resolveBannerFromText(text);
         if (banner == null) {
+            // Jika banner tidak diinginkan, tampilkan sebagai pesan sederhana (non-intrusive)
+            if (messageList.size() < MAX_MESSAGES) {
+                messageList.add(text);
+                messageCounter.add(0);
+            }
             return;
         }
         pushBanner(banner.tone, banner.title, banner.detail);
@@ -256,22 +271,16 @@ public class UserInterface {
         if (lower.contains("hujan")) {
             return createBanner(BannerTone.WEATHER, "Hujan Turun", text);
         }
-        if (lower.contains("api") || lower.contains("kebakaran") || lower.contains("firebreak")) {
+        if (lower.contains("api") || lower.contains("kebakaran")) {
             return createBanner(BannerTone.DANGER, "Kebakaran", text);
         }
         if (lower.contains("jual") || lower.contains("stok")) {
             return createBanner(BannerTone.ECONOMY, "Transaksi", text);
         }
-        if (lower.contains("panen") || lower.contains("tanam") || lower.contains("tumbuh")) {
-            return createBanner(BannerTone.SUCCESS, "Aktivitas Kebun", text);
-        }
-        if (lower.contains("gold tidak cukup") || lower.contains("tidak bisa")) {
-            return createBanner(BannerTone.WARNING, "Peringatan", text);
-        }
-        if (lower.contains("got a")) {
-            return createBanner(BannerTone.INFO, "Item Baru", text);
-        }
-        return createBanner(BannerTone.INFO, "Info", text);
+
+        // Suppress generic SUCCESS, WARNING, and INFO banners to keep game flow smooth.
+        // These will be displayed as simple non-intrusive messages instead.
+        return null;
     }
 
     private Banner createBanner(BannerTone tone, String title, String detail) {
@@ -319,6 +328,7 @@ public class UserInterface {
                 drawPlayerGold();
                 drawOverview();
                 drawControlHint();
+                drawSimpleMessages(); // Tampilkan pesan non-intrusive
                 break;
             case CHARACTER:
                 drawInventory();
@@ -340,6 +350,33 @@ public class UserInterface {
 
         // Banner notifikasi selalu tampil di semua state
         drawBanner();
+    }
+
+    private void drawSimpleMessages() {
+        int messageX = gp.getTileSize() / 2;
+        int messageY = gp.getTileSize() * 6;
+        g2.setFont(g2.getFont().deriveFont(Font.BOLD, 22F));
+
+        for (int i = 0; i < messageList.size(); i++) {
+            if (messageList.get(i) != null) {
+                // Shadow
+                g2.setColor(Color.black);
+                g2.drawString(messageList.get(i), messageX + 2, messageY + 2);
+                // Text
+                g2.setColor(Color.white);
+                g2.drawString(messageList.get(i), messageX, messageY);
+
+                int counter = messageCounter.get(i) + 1;
+                messageCounter.set(i, counter);
+                messageY += 30;
+
+                if (counter > 180) { // Tampil selama 3 detik
+                    messageList.remove(i);
+                    messageCounter.remove(i);
+                    i--;
+                }
+            }
+        }
     }
 
     private void drawMarketScreen() {
@@ -1057,10 +1094,16 @@ public class UserInterface {
             return;
         }
 
+        banner.age++;
+        int textDoneAt = banner.detail.length() * 2;
+        if (banner.age > textDoneAt + BANNER_HOLD_FRAMES) {
+            this.activeBanner = this.bannerQueue.poll();
+            if (this.activeBanner != null) this.activeBanner.age = 0;
+            return;
+        }
+
         this.g2.setColor(new Color(0, 0, 0, 100));
         this.g2.fillRect(0, 0, this.gp.getScreenWidth(), this.gp.getScreenHeight());
-
-        banner.age++;
 
         int boxW = this.gp.getScreenWidth() - 100;
         int boxH = this.gp.getTileSize() * 3 + 20;
@@ -1110,7 +1153,7 @@ public class UserInterface {
             if (banner.age % 60 < 30) {
                 this.g2.setFont(this.g2.getFont().deriveFont(Font.BOLD, 14F));
                 this.g2.drawString(
-                        "[ENTER] Lanjut", bubbleX + bubbleW - 110, bubbleY + bubbleH - 15);
+                        "[SPACE] Lanjut", bubbleX + bubbleW - 115, bubbleY + bubbleH - 15);
             }
         }
     }
