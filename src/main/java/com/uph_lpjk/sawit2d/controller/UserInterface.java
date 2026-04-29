@@ -11,6 +11,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontFormatException;
+import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
@@ -70,6 +71,7 @@ public class UserInterface {
     private Banner activeBanner;
     private final Queue<Banner> bannerQueue = new LinkedList<>();
     private final BufferedImage managerIcon;
+    private final BufferedImage titleCharacterIcon;
     private final BufferedImage loadingRatRun;
     private final BufferedImage loadingRatIdle;
     private final BufferedImage loadingSawit;
@@ -144,6 +146,8 @@ public class UserInterface {
         this.gameOverIcon = assetLoader.loadImage(28, 28, "/tile/after-kebakaran-2");
         this.firefighterIcon = assetLoader.loadImage(48, 48, "/player/elephant/elephant-front");
         this.managerIcon = assetLoader.loadImage(144, 144, "/player/attacks/rat-tracing.png");
+        this.titleCharacterIcon =
+                assetLoader.loadImage(160, 200, "/player/attacks/rat-tracing.png");
         this.loadingRatRun = assetLoader.loadImage(48, 48, "/player/walking/rat-run-to-right");
         this.loadingRatIdle = assetLoader.loadImage(48, 48, "/player/walking/rat");
         this.loadingSawit = assetLoader.loadImage(48, 48, "/sawit/sawit-panen");
@@ -583,59 +587,114 @@ public class UserInterface {
     }
 
     private void drawTitleScreen() {
-        this.g2.setColor(new Color(0, 0, 0));
-        this.g2.fillRect(0, 0, this.gp.getScreenWidth(), this.gp.getScreenHeight());
+        int sw = this.gp.getScreenWidth();
+        int sh = this.gp.getScreenHeight();
+        int ts = this.gp.getTileSize();
 
-        // TITLE NAME
-        this.g2.setFont(this.g2.getFont().deriveFont(Font.BOLD, 96F));
-        String text = "Sawit sawitan";
-        int x = getXforCenteredText(text);
-        int y = this.gp.getTileSize() * 3;
+        // ── BACKGROUND ───────────────────────────────────────────────────
+        GradientPaint bgGrad =
+                new GradientPaint(0, 0, new Color(10, 20, 8), 0, sh, new Color(36, 20, 6));
+        this.g2.setPaint(bgGrad);
+        this.g2.fillRect(0, 0, sw, sh);
 
-        // SHODOW
-        this.g2.setColor(Color.gray);
-        this.g2.drawString(text, x + 5, y + 5);
-        // MAIN COLOR
-        this.g2.setColor(Color.white);
-        this.g2.drawString(text, x, y);
+        // Subtle scanline texture for depth
+        this.g2.setColor(new Color(0, 0, 0, 28));
+        for (int sy = 0; sy < sh; sy += 4) {
+            this.g2.drawLine(0, sy, sw, sy);
+        }
+        this.g2.setPaint(null);
 
-        // BLUE BOY IMAGE
-        x = this.gp.getScreenWidth() / 2 - (this.gp.getTileSize() * 2) / 2;
-        y += this.gp.getTileSize() * 2;
+        // ── DECORATIVE PALM CORNERS ───────────────────────────────────────
+        int palmSz = ts + ts / 2;
+        this.g2.drawImage(this.loadingSawit, 16, sh - palmSz - 12, palmSz, palmSz, null);
         this.g2.drawImage(
-                this.gp.getPlayerMainCharacter(),
-                x,
-                y,
-                this.gp.getTileSize() * 2,
-                this.gp.getTileSize() * 2,
-                null);
+                this.loadingSawit, sw - palmSz - 16, sh - palmSz - 12, palmSz, palmSz, null);
 
-        // MENU
-        this.g2.setFont(this.g2.getFont().deriveFont(Font.BOLD, 48f));
+        // ── TITLE PANEL ───────────────────────────────────────────────────
+        int panelW = 540;
+        int panelX = (sw - panelW) / 2;
+        int panelY = 10;
+        int panelH = 62;
 
-        text = "NEW GAME";
-        x = getXforCenteredText(text);
-        y += this.gp.getTileSize() * 3.5;
-        this.g2.drawString(text, x, y);
-        if (this.commandNum == 0) {
-            this.g2.drawString(">", x - this.gp.getTileSize(), y);
+        this.g2.setColor(new Color(42, 32, 16, 210));
+        this.g2.fillRoundRect(panelX, panelY, panelW, panelH, 22, 22);
+        this.g2.setColor(new Color(214, 166, 82, 230));
+        this.g2.setStroke(new BasicStroke(3));
+        this.g2.drawRoundRect(panelX + 3, panelY + 3, panelW - 6, panelH - 6, 17, 17);
+
+        // ── TITLE TEXT ────────────────────────────────────────────────────
+        this.g2.setFont(this.g2.getFont().deriveFont(Font.BOLD, 50F));
+        String title = "SAWIT SAWITAN";
+        int tx = getXforCenteredText(title);
+        int ty = panelY + 46;
+        this.g2.setColor(new Color(70, 42, 6, 210));
+        this.g2.drawString(title, tx + 3, ty + 3);
+        this.g2.setColor(new Color(255, 215, 75));
+        this.g2.drawString(title, tx, ty);
+
+        // ── SUBTITLE ──────────────────────────────────────────────────────
+        this.g2.setFont(this.g2.getFont().deriveFont(Font.ITALIC, 14F));
+        String sub = "Kelola kebun sawit, hadapi bencana, raih kemenangan!";
+        this.g2.setColor(new Color(185, 160, 95, 200));
+        this.g2.drawString(sub, getXforCenteredText(sub), panelY + panelH + 16);
+
+        // ── CHARACTER PORTRAIT ────────────────────────────────────────────
+        int ratW = 160;
+        int ratH = 200;
+        int ratX = (sw - ratW) / 2;
+        int ratY = panelY + panelH + 28;
+
+        // Soft ambient glow rings behind character
+        this.g2.setColor(new Color(200, 155, 50, 30));
+        this.g2.fillOval(ratX - 30, ratY + 30, ratW + 60, ratH - 20);
+        this.g2.setColor(new Color(200, 155, 50, 18));
+        this.g2.fillOval(ratX - 55, ratY + 15, ratW + 110, ratH + 10);
+
+        if (this.titleCharacterIcon != null) {
+            this.g2.drawImage(this.titleCharacterIcon, ratX, ratY, ratW, ratH, null);
         }
 
-        text = "LOAD GAME";
-        x = getXforCenteredText(text);
-        y += this.gp.getTileSize();
-        this.g2.drawString(text, x, y);
-        if (this.commandNum == 1) {
-            this.g2.drawString(">", x - this.gp.getTileSize(), y);
+        // ── MENU BUTTONS ─────────────────────────────────────────────────
+        String[] options = {"NEW GAME", "LOAD GAME", "QUIT"};
+        int btnW = 250;
+        int btnH = 44;
+        int btnGap = 9;
+        int btnX = (sw - btnW) / 2;
+        int btnStartY = ratY + ratH + 14;
+
+        this.g2.setFont(this.g2.getFont().deriveFont(Font.BOLD, 24F));
+        for (int i = 0; i < options.length; i++) {
+            int btnY = btnStartY + i * (btnH + btnGap);
+            boolean selected = (this.commandNum == i);
+
+            if (selected) {
+                // Filled gold button
+                this.g2.setColor(new Color(214, 166, 82));
+                this.g2.fillRoundRect(btnX, btnY, btnW, btnH, 14, 14);
+                this.g2.setColor(new Color(255, 240, 170));
+                this.g2.setStroke(new BasicStroke(2f));
+                this.g2.drawRoundRect(btnX + 2, btnY + 2, btnW - 4, btnH - 4, 11, 11);
+            } else {
+                // Dim dark button
+                this.g2.setColor(new Color(42, 32, 14, 190));
+                this.g2.fillRoundRect(btnX, btnY, btnW, btnH, 14, 14);
+                this.g2.setColor(new Color(120, 94, 44, 190));
+                this.g2.setStroke(new BasicStroke(1.5f));
+                this.g2.drawRoundRect(btnX + 1, btnY + 1, btnW - 2, btnH - 2, 13, 13);
+            }
+
+            String opt = options[i];
+            int optX = btnX + (btnW - this.g2.getFontMetrics().stringWidth(opt)) / 2;
+            int optY = btnY + btnH / 2 + 9;
+            this.g2.setColor(selected ? new Color(38, 22, 4) : new Color(220, 192, 120));
+            this.g2.drawString(opt, optX, optY);
         }
 
-        text = "QUIT";
-        x = getXforCenteredText(text);
-        y += this.gp.getTileSize();
-        this.g2.drawString(text, x, y);
-        if (this.commandNum == 2) {
-            this.g2.drawString(">", x - this.gp.getTileSize(), y);
-        }
+        // ── FOOTER ────────────────────────────────────────────────────────
+        this.g2.setFont(this.g2.getFont().deriveFont(Font.PLAIN, 13F));
+        this.g2.setColor(new Color(140, 118, 72, 190));
+        String footer = "↑↓ Navigasi   |   ENTER Pilih";
+        this.g2.drawString(footer, getXforCenteredText(footer), sh - 10);
     }
 
     public int getFrameX() {
@@ -993,14 +1052,15 @@ public class UserInterface {
     }
 
     private void drawBanner() {
-        if (this.activeBanner == null) {
+        Banner banner = this.activeBanner;
+        if (banner == null) {
             return;
         }
 
         this.g2.setColor(new Color(0, 0, 0, 100));
         this.g2.fillRect(0, 0, this.gp.getScreenWidth(), this.gp.getScreenHeight());
 
-        this.activeBanner.age++;
+        banner.age++;
 
         int boxW = this.gp.getScreenWidth() - 100;
         int boxH = this.gp.getTileSize() * 3 + 20;
@@ -1032,12 +1092,12 @@ public class UserInterface {
         int textY = bubbleY + 32;
         this.g2.setColor(Color.BLACK);
         this.g2.setFont(this.g2.getFont().deriveFont(Font.PLAIN, 22F));
-        int displayedChars = this.activeBanner.age / 2;
-        if (displayedChars > this.activeBanner.detail.length()) {
-            displayedChars = this.activeBanner.detail.length();
+        int displayedChars = banner.age / 2;
+        if (displayedChars > banner.detail.length()) {
+            displayedChars = banner.detail.length();
         }
 
-        String displayedText = this.activeBanner.detail.substring(0, displayedChars);
+        String displayedText = banner.detail.substring(0, displayedChars);
         List<String> detailLines = wrapText(displayedText, bubbleW - 48);
 
         int detailY = bubbleY + 48;
@@ -1046,8 +1106,8 @@ public class UserInterface {
             detailY += 24;
         }
 
-        if (displayedChars == this.activeBanner.detail.length()) {
-            if (this.activeBanner.age % 60 < 30) {
+        if (displayedChars == banner.detail.length()) {
+            if (banner.age % 60 < 30) {
                 this.g2.setFont(this.g2.getFont().deriveFont(Font.BOLD, 14F));
                 this.g2.drawString(
                         "[ENTER] Lanjut", bubbleX + bubbleW - 110, bubbleY + bubbleH - 15);
