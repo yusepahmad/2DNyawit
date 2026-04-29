@@ -8,6 +8,8 @@ public class GameState {
     private int riskScore = 0;
     private String lastNotification = "Selamat datang di Sawit2D";
     private boolean raining = false;
+    private int totalHarvested = 0;
+    private int totalSold = 0;
 
     public int getDay() {
         return day;
@@ -88,6 +90,22 @@ public class GameState {
         this.raining = raining;
     }
 
+    public int getTotalHarvested() {
+        return totalHarvested;
+    }
+
+    public void addTotalHarvested(int amount) {
+        totalHarvested += amount;
+    }
+
+    public int getTotalSold() {
+        return totalSold;
+    }
+
+    public void addTotalSold(int amount) {
+        totalSold += amount;
+    }
+
     public void reset() {
         this.day = 1;
         this.hour = 6;
@@ -96,5 +114,7 @@ public class GameState {
         this.riskScore = 0;
         this.lastNotification = "Selamat datang di Sawit2D";
         this.raining = false;
+        this.totalHarvested = 0;
+        this.totalSold = 0;
     }
 }

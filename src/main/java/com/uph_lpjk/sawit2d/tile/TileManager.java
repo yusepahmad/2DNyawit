@@ -108,6 +108,11 @@ public class TileManager {
         setup(52, "/fire/api-5", false);
         setup(53, "/tile/after-banjir", false);
         setup(54, "/tile/kebakaran-2", false);
+
+        // MAP VARIETY TILES
+        setup(55, "/tile/tanah-rumput", false); // earthy grass patch
+        setup(56, "/tile/wall", true); // rock/boulder (collision)
+        setup(57, "/tile/grass01", false); // alternate grass
     }
 
     private void setup(int index, String folder, String imageName, boolean collision) {
