@@ -123,15 +123,15 @@ public class KeyHandler implements KeyListener {
         int commandNum = gp.getUICommandNum();
 
         if (subState == 0) {
-            // MAIN MARKET MENU
+            // MAIN MARKET MENU — 4 options: 0=Seeds, 1=Loudspeaker, 2=Sell, 3=Exit
             if (code == KeyEvent.VK_W) {
                 gp.setUICommandNum(commandNum - 1);
-                if (gp.getUICommandNum() < 0) gp.setUICommandNum(2);
+                if (gp.getUICommandNum() < 0) gp.setUICommandNum(3);
                 gp.playSoundEffect(9);
             }
             if (code == KeyEvent.VK_S) {
                 gp.setUICommandNum(commandNum + 1);
-                if (gp.getUICommandNum() > 2) gp.setUICommandNum(0);
+                if (gp.getUICommandNum() > 3) gp.setUICommandNum(0);
                 gp.playSoundEffect(9);
             }
             if (code == KeyEvent.VK_ENTER) {
@@ -140,11 +140,14 @@ public class KeyHandler implements KeyListener {
                         gp.getUserInterface().setSubState(1);
                         gp.getUserInterface().setBuyQty(1);
                         break;
-                    case 1: // Sell Harvest
+                    case 1: // Buy Loudspeaker
+                        buyLoudspeaker();
+                        break;
+                    case 2: // Sell Harvest
                         gp.getUserInterface().setSubState(2);
                         gp.getUserInterface().setSellQty(1);
                         break;
-                    case 2: // Exit
+                    case 3: // Exit
                         gp.setGameState(GamePanel.State.PLAY);
                         gp.setUICommandNum(0);
                         break;
@@ -157,7 +160,7 @@ public class KeyHandler implements KeyListener {
                 gp.playSoundEffect(9);
             }
         } else if (subState == 1) {
-            // BUY QUANTITY SELECTION
+            // BUY QUANTITY SELECTION (seeds)
             if (code == KeyEvent.VK_W || code == KeyEvent.VK_D) {
                 gp.getUserInterface().setBuyQty(gp.getUserInterface().getBuyQty() + 1);
                 gp.playSoundEffect(9);
@@ -176,6 +179,7 @@ public class KeyHandler implements KeyListener {
                     seeds.amount = qty;
                     gp.getPlayer().obtainItem(seeds);
                     gp.addUIMessage("Berhasil membeli " + qty + " bibit sawit.");
+                    gp.getAchievements().onItemBought();
                     gp.getUserInterface().setSubState(0);
                 } else {
                     gp.addUIMessage("Gold tidak cukup!");
@@ -188,8 +192,10 @@ public class KeyHandler implements KeyListener {
             }
         } else if (subState == 2) {
             // SELL QUANTITY SELECTION
+            int maxSell = gp.getFarmState().getInventory();
             if (code == KeyEvent.VK_W || code == KeyEvent.VK_D) {
-                gp.getUserInterface().setSellQty(gp.getUserInterface().getSellQty() + 1);
+                int next = gp.getUserInterface().getSellQty() + 1;
+                gp.getUserInterface().setSellQty(Math.min(next, maxSell));
                 gp.playSoundEffect(9);
             }
             if (code == KeyEvent.VK_S || code == KeyEvent.VK_A) {
@@ -197,16 +203,16 @@ public class KeyHandler implements KeyListener {
                 gp.playSoundEffect(9);
             }
             if (code == KeyEvent.VK_F) { // Sell All
-                gp.getUserInterface().setSellQty(gp.getFarmState().getInventory());
+                gp.getUserInterface().setSellQty(maxSell);
                 gp.playSoundEffect(9);
             }
             if (code == KeyEvent.VK_ENTER) {
                 int qty = gp.getUserInterface().getSellQty();
-                if (qty > 0 && qty <= gp.getFarmState().getInventory()) {
+                if (qty > 0 && qty <= maxSell) {
                     gp.getFarmSystem().sellInventory(qty);
                     gp.getUserInterface().setSubState(0);
-                } else if (qty > gp.getFarmState().getInventory()) {
-                    gp.addUIMessage("Stok tidak cukup!");
+                } else if (maxSell == 0) {
+                    gp.addUIMessage("Tidak ada TBS untuk dijual!");
                 }
                 gp.playSoundEffect(9);
             }
@@ -241,6 +247,7 @@ public class KeyHandler implements KeyListener {
         }
         if (code == KeyEvent.VK_ENTER) {
             if (this.gp.getUICommandNum() == 0) {
+                this.gp.getAchievements().resetAll();
                 this.gp.setGameState(GamePanel.State.PLAY);
                 gp.playMusic(0);
             }
@@ -260,9 +267,22 @@ public class KeyHandler implements KeyListener {
             this.actionPressed = true;
         }
 
-        // ATTACK (F)
+        // ATTACK (F) — or loudspeaker sound 1 if equipped
         if (code == KeyEvent.VK_F) {
-            this.actionKeyPressed = true;
+            if (this.gp.isLoudspeakerEquipped()) {
+                LoudspeakerSound.playResource("/sounds/hey-antek-antek-asing-prabowo.wav");
+                this.gp.getAchievements().onLoudspeakerUsed();
+                this.gp.addUIMessage("Heii... Antek-antek asing");
+            } else {
+                this.actionKeyPressed = true;
+            }
+        }
+
+        // LOUDSPEAKER sound 2 (G)
+        if (code == KeyEvent.VK_G && this.gp.isLoudspeakerEquipped()) {
+            LoudspeakerSound.playFile("/home/yusep/Downloads/hidup-jokowi.wav");
+            this.gp.getAchievements().onLoudspeakerUsed();
+            this.gp.addUIMessage("Hidup Jokowi!");
         }
 
         if (code == KeyEvent.VK_N) this.nextDayPressed = true;
@@ -278,6 +298,7 @@ public class KeyHandler implements KeyListener {
             if (isNearMarket()) {
                 this.gp.setGameState(GamePanel.State.MARKET);
                 this.gp.setUICommandNum(0);
+                this.gp.getAchievements().onMarketVisit();
             } else {
                 this.gp.addUIMessage("Anda harus berada di dekat pasar untuk bertransaksi!");
             }
@@ -286,14 +307,16 @@ public class KeyHandler implements KeyListener {
     }
 
     private boolean isNearMarket() {
-        int playerCol = gp.getPlayer().getWorldX() / gp.getTileSize();
-        int playerRow = gp.getPlayer().getWorldY() / gp.getTileSize();
+        int ts = gp.getTileSize();
+        // Use player center for more intuitive proximity detection
+        int playerCol = (gp.getPlayer().getWorldX() + ts / 2) / ts;
+        int playerRow = (gp.getPlayer().getWorldY() + ts / 2) / ts;
 
-        // Market is at (10, 3). Check if player is within 4 tiles radius.
-        int marketX = 10;
-        int marketY = 3;
+        // Market occupies cols 10-11, rows 3-4. Check proximity to market center (10, 3).
+        int marketCol = 10;
+        int marketRow = 3;
 
-        return Math.abs(playerCol - marketX) <= 4 && Math.abs(playerRow - marketY) <= 4;
+        return Math.abs(playerCol - marketCol) <= 6 && Math.abs(playerRow - marketRow) <= 6;
     }
 
     public void characterState(int code) {
@@ -343,15 +366,15 @@ public class KeyHandler implements KeyListener {
         }
 
         if (subState == 0) {
-            // MAIN PAUSE MENU
+            // MAIN PAUSE MENU — 6 options: Resume, Settings, Achievements, Reload, Game Menu, Exit
             if (code == KeyEvent.VK_W) {
                 gp.setUICommandNum(commandNum - 1);
-                if (gp.getUICommandNum() < 0) gp.setUICommandNum(4);
+                if (gp.getUICommandNum() < 0) gp.setUICommandNum(5);
                 gp.playSoundEffect(9);
             }
             if (code == KeyEvent.VK_S) {
                 gp.setUICommandNum(commandNum + 1);
-                if (gp.getUICommandNum() > 4) gp.setUICommandNum(0);
+                if (gp.getUICommandNum() > 5) gp.setUICommandNum(0);
                 gp.playSoundEffect(9);
             }
             if (code == KeyEvent.VK_ENTER) {
@@ -363,35 +386,42 @@ public class KeyHandler implements KeyListener {
                         gp.getUserInterface().setSubState(1);
                         gp.setUICommandNum(0);
                         break;
-                    case 2: // Reload Game
+                    case 2: // Achievements
+                        gp.getUserInterface().setSubState(2);
+                        break;
+                    case 3: // Reload Game
                         gp.getFarmSystem().resetSession();
+                        gp.getAchievements().resetAll();
                         gp.loadMap();
+                        gp.resetInteractiveTiles();
                         gp.getPlayer().resetToDefaultValues();
                         gp.setGameState(GamePanel.State.PLAY);
                         break;
-                    case 3: // Game Menu
+                    case 4: // Game Menu
                         gp.getFarmSystem().resetSession();
                         gp.getUserInterface().resetNotifications();
                         gp.setUICommandNum(0);
                         gp.setGameState(GamePanel.State.TITLE);
                         gp.stopMusic();
                         break;
-                    case 4: // Exit
+                    case 5: // Exit
                         System.exit(0);
                         break;
                 }
                 gp.playSoundEffect(9);
             }
+        } else if (subState == 2) {
+            // ACHIEVEMENTS screen — ESC already handled above, nothing else needed
         } else if (subState == 1) {
             // SETTINGS MENU
             if (code == KeyEvent.VK_W) {
                 gp.setUICommandNum(commandNum - 1);
-                if (gp.getUICommandNum() < 0) gp.setUICommandNum(2);
+                if (gp.getUICommandNum() < 0) gp.setUICommandNum(3);
                 gp.playSoundEffect(9);
             }
             if (code == KeyEvent.VK_S) {
                 gp.setUICommandNum(commandNum + 1);
-                if (gp.getUICommandNum() > 2) gp.setUICommandNum(0);
+                if (gp.getUICommandNum() > 3) gp.setUICommandNum(0);
                 gp.playSoundEffect(9);
             }
             if (code == KeyEvent.VK_A) {
@@ -400,6 +430,9 @@ public class KeyHandler implements KeyListener {
                 }
                 if (commandNum == 1 && gp.se.getVolumeScale() > 0) {
                     gp.se.setVolumeScale(gp.se.getVolumeScale() - 1);
+                }
+                if (commandNum == 2) {
+                    gp.applyWindowScale(-1);
                 }
                 gp.playSoundEffect(9);
             }
@@ -410,13 +443,33 @@ public class KeyHandler implements KeyListener {
                 if (commandNum == 1 && gp.se.getVolumeScale() < 5) {
                     gp.se.setVolumeScale(gp.se.getVolumeScale() + 1);
                 }
+                if (commandNum == 2) {
+                    gp.applyWindowScale(1);
+                }
                 gp.playSoundEffect(9);
             }
-            if (code == KeyEvent.VK_ENTER && commandNum == 2) {
+            if (code == KeyEvent.VK_ENTER && commandNum == 3) {
                 gp.getUserInterface().setSubState(0);
                 gp.setUICommandNum(1); // Return to 'Settings' option
                 gp.playSoundEffect(9);
             }
+        }
+    }
+
+    private void buyLoudspeaker() {
+        final int LOUDSPEAKER_COST = 1000000;
+        if (this.gp.getPlayerGold() >= LOUDSPEAKER_COST) {
+            // Check if already owned
+            if (this.gp.getPlayer().searchItemInInventory("Loudspeaker") != 999) {
+                this.gp.addUIMessage("Kamu sudah punya Loudspeaker!");
+                return;
+            }
+            this.gp.setPlayerGold(-LOUDSPEAKER_COST);
+            this.gp.getPlayer().obtainItem(new com.uph_lpjk.sawit2d.object.ObjLoudspeaker(this.gp));
+            this.gp.addUIMessage("Loudspeaker dibeli! Equip dari inventory, lalu F/G untuk pakai.");
+            this.gp.getAchievements().onLoudspeakerBought();
+        } else {
+            this.gp.addUIMessage("Gold tidak cukup! Loudspeaker harganya $" + LOUDSPEAKER_COST);
         }
     }
 

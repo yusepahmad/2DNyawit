@@ -1,5 +1,6 @@
 package com.uph_lpjk.sawit2d.controller;
 
+import com.uph_lpjk.sawit2d.achievement.AchievementManager;
 import com.uph_lpjk.sawit2d.entity.Entity;
 import com.uph_lpjk.sawit2d.entity.Player;
 import com.uph_lpjk.sawit2d.farm.FarmSystem;
@@ -13,6 +14,8 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
+import java.awt.Window;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
@@ -20,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
+import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
@@ -47,6 +51,10 @@ public class GamePanel extends JPanel implements Runnable {
     private Graphics2D g2;
     private boolean fullScreenOn = false;
 
+    // WINDOW SCALE: 0=Normal(960x576), 1=Large(1440x864), 2=Fullscreen
+    public static final String[] WINDOW_SCALE_LABELS = {"Normal", "Large", "Fullscreen"};
+    private int windowScaleIndex = 0;
+
     // FPS
     private final int FPS = 60;
 
@@ -60,6 +68,11 @@ public class GamePanel extends JPanel implements Runnable {
     private final UserInterface ui = new UserInterface(this);
     private final EventHandler eHandler = new EventHandler(this);
     private final FarmSystem farmSystem = new FarmSystem(this);
+    private final AchievementManager achievements = new AchievementManager();
+
+    // Loudspeaker state
+    private boolean loudspeakerEquipped = false;
+    private int treeChopCount = 0;
 
     // ENTITY AND OBJECT
     private final Player player = new Player(this, keyH);
@@ -310,23 +323,68 @@ public class GamePanel extends JPanel implements Runnable {
         return this.farmSystem.getGameState();
     }
 
+    public int getWindowScaleIndex() {
+        return windowScaleIndex;
+    }
+
+    public void applyWindowScale(int direction) {
+        int max = WINDOW_SCALE_LABELS.length - 1;
+        windowScaleIndex = Math.max(0, Math.min(max, windowScaleIndex + direction));
+
+        Window w = SwingUtilities.getWindowAncestor(this);
+        if (w == null) return;
+
+        if (windowScaleIndex == 2) {
+            // Fullscreen: gunakan ukuran layar penuh
+            Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+            screenWidth2 = screen.width;
+            screenHeight2 = screen.height;
+            fullScreenOn = true;
+            if (w instanceof JFrame) {
+                ((JFrame) w).setExtendedState(JFrame.MAXIMIZED_BOTH);
+            }
+        } else {
+            // Normal atau Large: resize window biasa
+            fullScreenOn = false;
+            if (w instanceof JFrame) {
+                ((JFrame) w).setExtendedState(JFrame.NORMAL);
+            }
+            if (windowScaleIndex == 0) {
+                screenWidth2 = SCREEN_WIDTH;
+                screenHeight2 = SCREEN_HEIGHT;
+            } else {
+                screenWidth2 = 1440;
+                screenHeight2 = 864;
+            }
+            setPreferredSize(new Dimension(screenWidth2, screenHeight2));
+            w.pack();
+            w.setLocationRelativeTo(null);
+        }
+        repaint();
+    }
+
     private void handleFarmMouseInput(MouseEvent e) {
         this.requestFocusInWindow();
         if (gameState == null) return;
 
+        // Konversi koordinat mouse dari window-space ke game-space (960x576).
+        // Diperlukan agar klik tetap akurat saat window diperbesar atau fullscreen.
+        int gameX = e.getX() * SCREEN_WIDTH / screenWidth2;
+        int gameY = e.getY() * SCREEN_HEIGHT / screenHeight2;
+
         if (gameState == State.EVENT) {
-            ui.handleEventInput(e.getX(), e.getY());
+            ui.handleEventInput(gameX, gameY);
             return;
         }
 
         if (gameState != GamePanel.State.PLAY) return;
 
         if (SwingUtilities.isLeftMouseButton(e)) {
-            farmSystem.interactAtScreenPoint(e.getX(), e.getY());
+            farmSystem.interactAtScreenPoint(gameX, gameY);
             return;
         }
         if (SwingUtilities.isRightMouseButton(e) || e.isPopupTrigger()) {
-            farmSystem.toggleFirebreakAtScreenPoint(e.getX(), e.getY());
+            farmSystem.toggleFirebreakAtScreenPoint(gameX, gameY);
         }
     }
 
@@ -500,13 +558,19 @@ public class GamePanel extends JPanel implements Runnable {
         this.stopMusic();
     }
 
+    public void resetInteractiveTiles() {
+        this.aSetter.setInteractiveTile();
+    }
+
     public void returnHomeFromGameOver() {
         this.player.resetToDefaultValues();
         int currentGold = this.player.getGold();
         if (currentGold != 1000) this.player.setGold(1000 - currentGold);
         this.farmSystem.resetSession();
+        this.aSetter.setInteractiveTile();
         this.ui.resetNotifications();
         this.ui.setCommandNum(0);
+        this.resetSessionAchievements();
         this.gameState = State.TITLE;
     }
 
@@ -538,6 +602,31 @@ public class GamePanel extends JPanel implements Runnable {
         this.gameState = GamePanel.State.TITLE;
         tempScreen = new BufferedImage(SCREEN_WIDTH, SCREEN_HEIGHT, BufferedImage.TYPE_INT_ARGB);
         g2 = (Graphics2D) tempScreen.getGraphics();
+        // Wire achievement manager to UI so it can push banners
+        this.achievements.setUI(this.ui);
+    }
+
+    public AchievementManager getAchievements() {
+        return this.achievements;
+    }
+
+    public boolean isLoudspeakerEquipped() {
+        return loudspeakerEquipped;
+    }
+
+    public void setLoudspeakerEquipped(boolean v) {
+        this.loudspeakerEquipped = v;
+    }
+
+    public void incrementTreeChop() {
+        treeChopCount++;
+        this.achievements.onTreeChoppedCount(treeChopCount);
+    }
+
+    public void resetSessionAchievements() {
+        this.achievements.resetSession();
+        this.treeChopCount = 0;
+        this.loudspeakerEquipped = false;
     }
 
     public void startGameThread() {
@@ -571,6 +660,11 @@ public class GamePanel extends JPanel implements Runnable {
 
     public void update() {
         if (this.gameState == GamePanel.State.PLAY) {
+            // ACHIEVEMENTS: survival timer + gold check (every 60 frames ~= 1 sec)
+            this.achievements.startSurvivalTimer();
+            this.achievements.checkSurvivalTimer();
+            this.achievements.onGoldCheck(this.player.getGold());
+
             // PLAYER
             player.update();
 
