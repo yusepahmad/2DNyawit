@@ -7,14 +7,14 @@ public class GardenerService {
     public GardenerResult prepareHarvest(FarmGrid grid) {
         int ready = grid.countReadyTiles();
         if (ready == 0) {
-            return new GardenerResult(0, 0, "Tidak ada sawit siap panen untuk dibantu.");
+            return new GardenerResult(0, 0, "Belum ada sawit yang siap dipanen.");
         }
         return new GardenerResult(
                 ready,
                 HARVEST_HELP_COST,
                 "Tukang kebun siap memanen "
                         + ready
-                        + " tile (biaya "
+                        + " petak (biaya "
                         + HARVEST_HELP_COST
                         + " gold).");
     }
@@ -33,9 +33,7 @@ public class GardenerService {
                 appliedMultiplier,
                 "Tukang kebun menjual "
                         + stock
-                        + " unit dengan multiplier "
-                        + Math.round(appliedMultiplier * 100)
-                        + "% (+"
+                        + " TBS (harga diskon, +"
                         + discountedIncome
                         + " gold).");
     }

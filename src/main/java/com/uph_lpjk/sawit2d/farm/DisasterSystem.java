@@ -24,7 +24,7 @@ public class DisasterSystem {
             gp.playSoundEffect(10);
             state.addReputation(-2);
             state.modifyRisk(Math.max(1, ignited / 2));
-            state.setLastNotification("Disaster: kebakaran mulai di " + ignited + " sawit.");
+            state.setLastNotification("Kebakaran! Api membakar " + ignited + " petak sawit.");
             return true;
         }
         return false;

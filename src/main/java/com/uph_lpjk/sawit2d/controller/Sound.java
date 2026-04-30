@@ -14,10 +14,10 @@ public class Sound {
     private FloatControl fcs[] = new FloatControl[30];
     private FloatControl fc;
     private int volumeScale;
-    private final int MAX_VOLUME_SCALE = 4; // Caps volume to max 80% representation
+    private final int MAX_VOLUME_SCALE = 4;
 
     public Sound() {
-        volumeScale = 3; // Default volume
+        volumeScale = 3;
         soundUrl[0] = getClass().getResource("/sounds/spring.wav");
         soundUrl[1] = getClass().getResource("/sounds/coin.wav");
         soundUrl[2] = getClass().getResource("/sounds/powerup.wav");
@@ -44,7 +44,7 @@ public class Sound {
             clip = clips[i];
             fc = fcs[i];
             clip.setFramePosition(0);
-            checkVolume(); // Apply volume setting immediately when clip is loaded
+            checkVolume();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -70,12 +70,12 @@ public class Sound {
 
     public void checkVolume() {
         if (fc != null) {
-            // Cap the volume to the maximum allowed scale
+
             int effectiveScale = Math.min(volumeScale, MAX_VOLUME_SCALE);
 
             switch (effectiveScale) {
                 case 0:
-                    fc.setValue(-80f); // Mute
+                    fc.setValue(-80f);
                     break;
                 case 1:
                     fc.setValue(-20f);
@@ -84,13 +84,13 @@ public class Sound {
                     fc.setValue(-12f);
                     break;
                 case 3:
-                    fc.setValue(-5f); // Default
+                    fc.setValue(-5f);
                     break;
                 case 4:
-                    fc.setValue(1f); // Max allowed (under 100%)
+                    fc.setValue(1f);
                     break;
                 case 5:
-                    fc.setValue(6f); // Unreachable due to cap
+                    fc.setValue(6f);
                     break;
             }
         }
@@ -101,7 +101,7 @@ public class Sound {
     }
 
     public void setVolumeScale(int scale) {
-        // Only allow values 0 to 5, though actual applied volume is capped at MAX_VOLUME_SCALE
+
         if (scale >= 0 && scale <= 5) {
             this.volumeScale = scale;
             checkVolume();

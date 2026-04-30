@@ -87,11 +87,10 @@ public class CollisionChecker {
 
         for (int i = 0; i < this.gp.getObjectLength(); i++) {
             if (this.gp.getObject(i) != null) {
-                // Get entity's solid area position
+
                 entity.setSolidAreaX(entity.getWorldX() + entity.getSolidAreaX());
                 entity.setSolidAreaY(entity.getWorldY() + entity.getSolidAreaY());
 
-                // Get the object's solid area position
                 this.gp.setObjectSolidAreaX(
                         i, this.gp.getObjectWorldX(i) + this.gp.getObjectSolidAreaX(i));
                 this.gp.setObjectSolidAreaY(
@@ -132,17 +131,15 @@ public class CollisionChecker {
         return index;
     }
 
-    // Branch A Integration: Added checkEntity for interacting with trees/targets
     public int checkEntity(Entity entity, Entity[] target) {
         int index = 999;
 
         for (int i = 0; i < target.length; i++) {
             if (target[i] != null) {
-                // Get entity's solid area position
+
                 entity.setSolidAreaX(entity.getWorldX() + entity.getSolidAreaX());
                 entity.setSolidAreaY(entity.getWorldY() + entity.getSolidAreaY());
 
-                // Get the object's solid area position
                 target[i].setSolidAreaX(target[i].getWorldX() + target[i].getSolidAreaX());
                 target[i].setSolidAreaY(target[i].getWorldY() + target[i].getSolidAreaY());
 
@@ -181,7 +178,7 @@ public class CollisionChecker {
         int index = 999;
         for (int i = 0; i < target.length; i++) {
             if (target[i] != null) {
-                // Get target's solid area in world coordinates
+
                 java.awt.Rectangle targetSolidArea = new java.awt.Rectangle();
                 targetSolidArea.x = target[i].getWorldX() + target[i].getSolidAreaX();
                 targetSolidArea.y = target[i].getWorldY() + target[i].getSolidAreaY();
@@ -197,15 +194,12 @@ public class CollisionChecker {
         return index;
     }
 
-    // Branch A Integration: Added checkPlayer for NPC/Object interactions
     public boolean checkPlayer(Entity entity) {
         boolean contactPlayer = false;
 
-        // Get entity's solid area position
         entity.setSolidAreaX(entity.getWorldX() + entity.getSolidAreaX());
         entity.setSolidAreaY(entity.getWorldY() + entity.getSolidAreaY());
 
-        // Get player's solid area position
         this.gp.setPlayerSolidAreaX(this.gp.getPlayerWorldX() + this.gp.getPlayerSolidAreaX());
         this.gp.setPlayerSolidAreaY(this.gp.getPlayerWorldY() + this.gp.getPlayerSolidAreaY());
 

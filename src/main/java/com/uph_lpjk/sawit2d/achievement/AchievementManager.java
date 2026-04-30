@@ -1,7 +1,5 @@
 package com.uph_lpjk.sawit2d.achievement;
 
-import com.uph_lpjk.sawit2d.controller.UserInterface;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -12,9 +10,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.uph_lpjk.sawit2d.controller.UserInterface;
+
 public class AchievementManager {
 
-    // Achievement IDs
     public static final String FIRST_BUY = "FIRST_BUY";
     public static final String LOUDSPEAKER_OWNER = "LOUDSPEAKER_OWNER";
     public static final String LOUDSPEAKER_USED = "LOUDSPEAKER_USED";
@@ -28,7 +27,6 @@ public class AchievementManager {
     private final Map<String, Achievement> achievements = new LinkedHashMap<>();
     private UserInterface ui;
 
-    // Counters (not persisted between sessions, tracked in-memory)
     private int marketVisits = 0;
     private long survivalStartMillis = 0;
     private boolean survivalTimerRunning = false;
@@ -115,7 +113,7 @@ public class AchievementManager {
         }
     }
 
-    // --- Event hooks ---
+    
 
     public void onMarketVisit() {
         marketVisits++;
@@ -140,7 +138,7 @@ public class AchievementManager {
     }
 
     public void onTreeChopped() {
-        // Lumberjack: tracked externally via counter on GamePanel
+        
     }
 
     public void onTreeChoppedCount(int total) {
@@ -187,7 +185,7 @@ public class AchievementManager {
         new java.io.File(SAVE_FILE).delete();
     }
 
-    // --- Persistence ---
+    
 
     private void save() {
         try (PrintWriter pw = new PrintWriter(new FileWriter(SAVE_FILE))) {
@@ -197,7 +195,7 @@ public class AchievementManager {
                 }
             }
         } catch (IOException e) {
-            // Non-fatal: achievements just won't persist
+            
         }
     }
 
@@ -213,7 +211,7 @@ public class AchievementManager {
                 }
             }
         } catch (IOException e) {
-            // Non-fatal
+            
         }
     }
 }

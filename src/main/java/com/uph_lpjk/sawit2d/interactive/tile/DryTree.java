@@ -19,7 +19,6 @@ public class DryTree extends InteractiveTile {
         destructible = true;
         setLife(3);
 
-        // Define a smaller, more realistic solid area (centered bottom)
         this.solidArea.x = 8;
         this.solidArea.y = 16;
         this.solidArea.width = 32;

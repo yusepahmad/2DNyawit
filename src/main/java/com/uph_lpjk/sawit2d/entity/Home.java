@@ -23,7 +23,6 @@ public class Home extends Entity {
         this.screenX = this.screenWidth / 2 - (this.tileSize / 2);
         this.screenY = this.screenHeight / 2 - (this.tileSize / 2);
 
-        // SOLID AREA
         solidArea = new Rectangle();
         solidArea.x = 8;
         solidArea.y = 16;

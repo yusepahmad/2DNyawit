@@ -9,7 +9,6 @@ public class UIElement {
     private final Graphics2D g2;
     private final GamePanel gp;
 
-    // Theme Colors
     public static final Color BG_COLOR = new Color(42, 32, 24, 215);
     public static final Color BORDER_COLOR = new Color(214, 166, 82, 180);
     public static final Color ACTIVE_COLOR = new Color(214, 166, 82, 220);
@@ -34,7 +33,7 @@ public class UIElement {
 
     public void inventorySlot(
             int x, int y, int size, Image icon, boolean equipped, boolean selected) {
-        // Slot background
+
         g2.setColor(new Color(60, 45, 35, 150));
         g2.fillRoundRect(x, y, size, size, 10, 10);
 

@@ -97,7 +97,6 @@ public class TileManager {
         setup(43, "tile", "floor01", false);
         setup(44, "tile", "table01", true);
 
-        // FARM SPECIFIC TILES
         setup(45, "/tile/earth", false);
         setup(46, "/sawit/sawit-fase-1", false);
         setup(47, "/sawit/sawit-fase-2", false);
@@ -109,10 +108,9 @@ public class TileManager {
         setup(53, "/tile/after-banjir", false);
         setup(54, "/tile/kebakaran-2", false);
 
-        // MAP VARIETY TILES
-        setup(55, "/tile/tanah-rumput", false); // earthy grass patch
-        setup(56, "/tile/wall", true); // rock/boulder (collision)
-        setup(57, "/tile/grass01", false); // alternate grass
+        setup(55, "/tile/tanah-rumput", false);
+        setup(56, "/tile/wall", true);
+        setup(57, "/tile/grass01", false);
     }
 
     private void setup(int index, String folder, String imageName, boolean collision) {

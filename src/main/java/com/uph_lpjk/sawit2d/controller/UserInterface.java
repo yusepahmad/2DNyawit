@@ -68,12 +68,11 @@ public class UserInterface {
     private Graphics2D g2;
     private Font maruMonica, purisaBold;
 
-    private static final int BANNER_HOLD_FRAMES = 120; // 2 detik setelah teks selesai
+    private static final int BANNER_HOLD_FRAMES = 120;
 
     private Banner activeBanner;
     private final Queue<Banner> bannerQueue = new LinkedList<>();
 
-    // SIMPLE MESSAGE SYSTEM (Non-intrusive)
     private final List<String> messageList = new ArrayList<>();
     private final List<Integer> messageCounter = new ArrayList<>();
     private static final int MAX_MESSAGES = 5;
@@ -84,7 +83,6 @@ public class UserInterface {
     private final BufferedImage loadingRatIdle;
     private final BufferedImage loadingSawit;
 
-    // EVENT SYSTEM
     private boolean eventActive = false;
     private String eventTitle = "";
     private String eventMessage = "";
@@ -141,7 +139,6 @@ public class UserInterface {
             e.printStackTrace();
         }
 
-        // CREATE HUD OBJECT
         Entity objGold = new ObjGold(gp);
         this.gold = objGold.getImage();
 
@@ -220,7 +217,7 @@ public class UserInterface {
 
         Banner banner = resolveBannerFromText(text);
         if (banner == null) {
-            // Jika banner tidak diinginkan, tampilkan sebagai pesan sederhana (non-intrusive)
+
             if (messageList.size() < MAX_MESSAGES) {
                 messageList.add(text);
                 messageCounter.add(0);
@@ -271,15 +268,10 @@ public class UserInterface {
         if (lower.contains("hujan")) {
             return createBanner(BannerTone.WEATHER, "Hujan Turun", text);
         }
-        if (lower.contains("api") || lower.contains("kebakaran")) {
+        if (lower.contains("kebakaran")) {
             return createBanner(BannerTone.DANGER, "Kebakaran", text);
         }
-        if (lower.contains("jual") || lower.contains("stok")) {
-            return createBanner(BannerTone.ECONOMY, "Transaksi", text);
-        }
 
-        // Suppress generic SUCCESS, WARNING, and INFO banners to keep game flow smooth.
-        // These will be displayed as simple non-intrusive messages instead.
         return null;
     }
 
@@ -309,9 +301,7 @@ public class UserInterface {
     public void draw(Graphics2D g2) {
         this.g2 = g2;
 
-        // SET FONT
         this.g2.setFont(this.maruMonica);
-        // this.g2.setFont(purisaBold);
 
         this.g2.setRenderingHint(
                 RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
@@ -327,8 +317,9 @@ public class UserInterface {
             case PLAY:
                 drawPlayerGold();
                 drawOverview();
+                drawAutoModeIndicator();
                 drawControlHint();
-                drawSimpleMessages(); // Tampilkan pesan non-intrusive
+                drawSimpleMessages();
                 break;
             case CHARACTER:
                 drawInventory();
@@ -348,29 +339,33 @@ public class UserInterface {
                 break;
         }
 
-        // Banner notifikasi selalu tampil di semua state
         drawBanner();
     }
 
     private void drawSimpleMessages() {
-        int messageX = gp.getTileSize() / 2;
-        int messageY = gp.getTileSize() * 6;
-        g2.setFont(g2.getFont().deriveFont(Font.BOLD, 22F));
+        g2.setFont(g2.getFont().deriveFont(Font.BOLD, 18F));
+        int centerX = gp.getScreenWidth() / 2;
+        int lineH = 26;
+
+        int baseY = gp.getScreenHeight() - 40 - (messageList.size() - 1) * lineH;
 
         for (int i = 0; i < messageList.size(); i++) {
             if (messageList.get(i) != null) {
-                // Shadow
-                g2.setColor(Color.black);
-                g2.drawString(messageList.get(i), messageX + 2, messageY + 2);
-                // Text
+                String msg = messageList.get(i);
+                int w = (int) g2.getFontMetrics().getStringBounds(msg, g2).getWidth();
+                int x = centerX - w / 2;
+                int y = baseY + i * lineH;
+
+                g2.setColor(new Color(0, 0, 0, 180));
+                g2.drawString(msg, x + 2, y + 2);
+
                 g2.setColor(Color.white);
-                g2.drawString(messageList.get(i), messageX, messageY);
+                g2.drawString(msg, x, y);
 
                 int counter = messageCounter.get(i) + 1;
                 messageCounter.set(i, counter);
-                messageY += 30;
 
-                if (counter > 180) { // Tampil selama 3 detik
+                if (counter > 180) {
                     messageList.remove(i);
                     messageCounter.remove(i);
                     i--;
@@ -390,7 +385,7 @@ public class UserInterface {
     }
 
     private void drawLoadingScreen() {
-        // BACKGROUND
+
         this.g2.setColor(new Color(20, 20, 20));
         this.g2.fillRect(0, 0, this.gp.getScreenWidth(), this.gp.getScreenHeight());
 
@@ -401,28 +396,23 @@ public class UserInterface {
 
         float progress = this.gp.getLoadingProgress();
 
-        // BORDER
         this.g2.setColor(new Color(200, 200, 200));
         this.g2.setStroke(new BasicStroke(3));
         this.g2.drawRoundRect(barX, barY, barW, barH, 25, 25);
 
-        // PROGRESS FILL (GREEN TRANSPARENT)
         this.g2.setColor(new Color(50, 200, 50, 100));
         int fillW = (int) (barW * progress);
         if (fillW > 0) {
             this.g2.fillRoundRect(barX, barY, fillW, barH, 25, 25);
         }
 
-        // SAWIT PANEN AT THE END
         this.g2.drawImage(this.loadingSawit, barX + barW - 24, barY - 15, 48, 48, null);
 
-        // RAT
         int ratX = barX + (int) (barW * progress) - 24;
         int ratY = barY - 15;
         BufferedImage ratImg = (progress < 1.0f) ? this.loadingRatRun : this.loadingRatIdle;
         this.g2.drawImage(ratImg, ratX, ratY, 48, 48, null);
 
-        // LOADING TEXT
         this.g2.setFont(this.g2.getFont().deriveFont(Font.BOLD, 24F));
         this.g2.setColor(Color.WHITE);
         String text = "MEMUAT LAHAN...";
@@ -580,20 +570,16 @@ public class UserInterface {
 
         drawSubWindow(x, y, width, height);
 
-        // ICON
         g2.drawImage(firefighterIcon, x + 30, y + 30, 60, 60, null);
 
-        // TITLE
         g2.setFont(g2.getFont().deriveFont(Font.BOLD, 28F));
         g2.setColor(new Color(255, 240, 200));
         g2.drawString(eventTitle, x + 110, y + 60);
 
-        // BODY
         g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 20F));
         g2.setColor(new Color(245, 220, 180));
         drawWrappedText(eventMessage, x + 110, y + 100, width - 140, 25, false);
 
-        // BUTTONS
         eventButtonRects.clear();
         int btnW = 220;
         int btnH = 50;
@@ -602,16 +588,14 @@ public class UserInterface {
 
         for (int i = eventOptions.length - 1; i >= 0; i--) {
             Rectangle rect = new Rectangle(btnX, btnY, btnW, btnH);
-            eventButtonRects.add(0, rect); // Keep order for index matching
+            eventButtonRects.add(0, rect);
 
-            // Draw Button Background
             g2.setColor(new Color(92, 64, 22));
             g2.fillRoundRect(rect.x, rect.y, rect.width, rect.height, 10, 10);
             g2.setColor(new Color(214, 166, 82));
             g2.setStroke(new BasicStroke(2));
             g2.drawRoundRect(rect.x, rect.y, rect.width, rect.height, 10, 10);
 
-            // Draw Text
             g2.setFont(g2.getFont().deriveFont(Font.BOLD, 18F));
             g2.setColor(Color.WHITE);
             int textX =
@@ -628,26 +612,22 @@ public class UserInterface {
         int sh = this.gp.getScreenHeight();
         int ts = this.gp.getTileSize();
 
-        // ── BACKGROUND ───────────────────────────────────────────────────
         GradientPaint bgGrad =
                 new GradientPaint(0, 0, new Color(10, 20, 8), 0, sh, new Color(36, 20, 6));
         this.g2.setPaint(bgGrad);
         this.g2.fillRect(0, 0, sw, sh);
 
-        // Subtle scanline texture for depth
         this.g2.setColor(new Color(0, 0, 0, 28));
         for (int sy = 0; sy < sh; sy += 4) {
             this.g2.drawLine(0, sy, sw, sy);
         }
         this.g2.setPaint(null);
 
-        // ── DECORATIVE PALM CORNERS ───────────────────────────────────────
         int palmSz = ts + ts / 2;
         this.g2.drawImage(this.loadingSawit, 16, sh - palmSz - 12, palmSz, palmSz, null);
         this.g2.drawImage(
                 this.loadingSawit, sw - palmSz - 16, sh - palmSz - 12, palmSz, palmSz, null);
 
-        // ── TITLE PANEL ───────────────────────────────────────────────────
         int panelW = 540;
         int panelX = (sw - panelW) / 2;
         int panelY = 10;
@@ -659,7 +639,6 @@ public class UserInterface {
         this.g2.setStroke(new BasicStroke(3));
         this.g2.drawRoundRect(panelX + 3, panelY + 3, panelW - 6, panelH - 6, 17, 17);
 
-        // ── TITLE TEXT ────────────────────────────────────────────────────
         this.g2.setFont(this.g2.getFont().deriveFont(Font.BOLD, 50F));
         String title = "SAWIT SAWITAN";
         int tx = getXforCenteredText(title);
@@ -669,19 +648,16 @@ public class UserInterface {
         this.g2.setColor(new Color(255, 215, 75));
         this.g2.drawString(title, tx, ty);
 
-        // ── SUBTITLE ──────────────────────────────────────────────────────
         this.g2.setFont(this.g2.getFont().deriveFont(Font.ITALIC, 14F));
         String sub = "Kelola kebun sawit, hadapi bencana, raih kemenangan!";
         this.g2.setColor(new Color(185, 160, 95, 200));
         this.g2.drawString(sub, getXforCenteredText(sub), panelY + panelH + 16);
 
-        // ── CHARACTER PORTRAIT ────────────────────────────────────────────
         int ratW = 160;
         int ratH = 200;
         int ratX = (sw - ratW) / 2;
         int ratY = panelY + panelH + 28;
 
-        // Soft ambient glow rings behind character
         this.g2.setColor(new Color(200, 155, 50, 30));
         this.g2.fillOval(ratX - 30, ratY + 30, ratW + 60, ratH - 20);
         this.g2.setColor(new Color(200, 155, 50, 18));
@@ -691,7 +667,6 @@ public class UserInterface {
             this.g2.drawImage(this.titleCharacterIcon, ratX, ratY, ratW, ratH, null);
         }
 
-        // ── MENU BUTTONS ─────────────────────────────────────────────────
         String[] options = {"NEW GAME", "LOAD GAME", "QUIT"};
         int btnW = 250;
         int btnH = 44;
@@ -705,14 +680,14 @@ public class UserInterface {
             boolean selected = (this.commandNum == i);
 
             if (selected) {
-                // Filled gold button
+
                 this.g2.setColor(new Color(214, 166, 82));
                 this.g2.fillRoundRect(btnX, btnY, btnW, btnH, 14, 14);
                 this.g2.setColor(new Color(255, 240, 170));
                 this.g2.setStroke(new BasicStroke(2f));
                 this.g2.drawRoundRect(btnX + 2, btnY + 2, btnW - 4, btnH - 4, 11, 11);
             } else {
-                // Dim dark button
+
                 this.g2.setColor(new Color(42, 32, 14, 190));
                 this.g2.fillRoundRect(btnX, btnY, btnW, btnH, 14, 14);
                 this.g2.setColor(new Color(120, 94, 44, 190));
@@ -727,7 +702,6 @@ public class UserInterface {
             this.g2.drawString(opt, optX, optY);
         }
 
-        // ── FOOTER ────────────────────────────────────────────────────────
         this.g2.setFont(this.g2.getFont().deriveFont(Font.PLAIN, 13F));
         this.g2.setColor(new Color(140, 118, 72, 190));
         String footer = "↑↓ Navigasi   |   ENTER Pilih";
@@ -753,7 +727,6 @@ public class UserInterface {
     private void drawInventory() {
         UIElement ui = new UIElement(g2, gp);
 
-        // MAIN FRAME
         int windowX = this.gp.getTileSize() * 10;
         int windowY = this.gp.getTileSize();
         int frameWidth = (this.gp.getTileSize() * this.frameX) + 1;
@@ -761,7 +734,6 @@ public class UserInterface {
 
         ui.beginWindow(windowX, windowY, frameWidth, frameHeight);
 
-        // SLOT SETUP
         int slotCols = getSlotCols();
         int slotRows = getSlotRows();
         int slotSize = this.gp.getTileSize() + 3;
@@ -772,7 +744,6 @@ public class UserInterface {
         final int slotXstart = windowX + (frameWidth - totalSlotsWidth) / 2;
         final int slotYstart = windowY + (frameHeight - totalSlotsHeight) / 2;
 
-        // DRAW SLOTS
         int totalSlots = slotCols * slotRows;
         for (int i = 0; i < totalSlots; i++) {
             int col = i % slotCols;
@@ -793,7 +764,6 @@ public class UserInterface {
                     equipped,
                     selected);
 
-            // DRAW AMOUNT
             if (item != null && item.stackable) {
                 g2.setFont(g2.getFont().deriveFont(Font.BOLD, 14F));
                 g2.setColor(Color.white);
@@ -803,7 +773,6 @@ public class UserInterface {
             }
         }
 
-        // DESCRIPTION FRAME
         int dFrameX = windowX;
         int dFrameY = windowY + frameHeight + 10;
         int dFrameWidth = frameWidth;
@@ -816,7 +785,6 @@ public class UserInterface {
             ui.multilineText(selectedItem.getDescription(), dFrameX + 20, dFrameY + 35, 32, 20f);
         }
 
-        // HELP TEXT
         ui.text(
                 "Enter: Pilih",
                 windowX + 20,
@@ -842,10 +810,9 @@ public class UserInterface {
         int textX = imageX + imageWidth + 2;
         int textY = imageY + (imageHeight / 2) + 15;
 
-        // Draw Shadow
         this.g2.setColor(Color.black);
         this.g2.drawString(text, textX + 2, textY + 2);
-        // Draw Text
+
         this.g2.setColor(Color.white);
         this.g2.drawString(text, textX, textY);
     }
@@ -916,7 +883,6 @@ public class UserInterface {
         g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 24F));
         g2.setColor(Color.white);
 
-        // Music Volume (commandNum 0)
         text = "Music Volume";
         tx = x + gp.getTileSize();
         ty += (int) (gp.getTileSize() * 1.5);
@@ -924,14 +890,12 @@ public class UserInterface {
         drawVolumeBar(x + width - gp.getTileSize() * 4, ty - 20, gp.music.getVolumeScale());
         if (commandNum == 0) g2.drawString(">", tx - 25, ty);
 
-        // SE Volume (commandNum 1)
         text = "SE Volume";
         ty += gp.getTileSize();
         g2.drawString(text, tx, ty);
         drawVolumeBar(x + width - gp.getTileSize() * 4, ty - 20, gp.se.getVolumeScale());
         if (commandNum == 1) g2.drawString(">", tx - 25, ty);
 
-        // Window Size (commandNum 2)
         text = "Window Size";
         ty += gp.getTileSize();
         g2.drawString(text, tx, ty);
@@ -940,7 +904,6 @@ public class UserInterface {
         g2.drawString(scaleLabel, labelX, ty);
         if (commandNum == 2) g2.drawString(">", tx - 25, ty);
 
-        // Back (commandNum 3)
         text = "Back";
         tx = getXforCenteredText(text);
         ty += (int) (gp.getTileSize() * 1.5);
@@ -967,7 +930,6 @@ public class UserInterface {
         int total = all.size();
         int unlocked = (int) all.stream().filter(Achievement::isUnlocked).count();
 
-        // Panel sizing: tall enough for all entries
         int lineH = 36;
         int headerH = ts + 20;
         int footerH = ts;
@@ -976,22 +938,18 @@ public class UserInterface {
         int x = (gp.getScreenWidth() - width) / 2;
         int y = (gp.getScreenHeight() - height) / 2;
 
-        // Dim background
         g2.setColor(new Color(0, 0, 0, 180));
         g2.fillRect(0, 0, gp.getScreenWidth(), gp.getScreenHeight());
         drawSubWindow(x, y, width, height);
 
-        // Title + progress fraction
         g2.setFont(g2.getFont().deriveFont(Font.BOLD, 20F));
         g2.setColor(new Color(255, 240, 200));
         String title = "ACHIEVEMENTS  " + unlocked + "/" + total;
         g2.drawString(title, getXforCenteredText(title), y + 28);
 
-        // Divider
         g2.setColor(new Color(180, 150, 80, 160));
         g2.drawLine(x + 16, y + 36, x + width - 16, y + 36);
 
-        // Progress bar
         int barW = width - 32;
         int barH = 6;
         int barX = x + 16;
@@ -1002,41 +960,36 @@ public class UserInterface {
         g2.setColor(new Color(100, 210, 100));
         if (filled > 0) g2.fillRoundRect(barX, barY, filled, barH, 4, 4);
 
-        // Achievement list
         int textX = x + 16;
         int textY = y + headerH + 20;
         g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 14F));
 
         for (Achievement a : all) {
             if (a.isUnlocked()) {
-                // Badge terbuka
+
                 g2.setColor(new Color(80, 180, 80));
                 g2.fillRoundRect(textX, textY - 13, 18, 16, 4, 4);
                 g2.setColor(new Color(220, 255, 220));
                 g2.drawString("V", textX + 4, textY - 1);
 
-                // Nama achievement (bold)
                 g2.setFont(g2.getFont().deriveFont(Font.BOLD, 14F));
                 g2.setColor(new Color(130, 230, 130));
                 g2.drawString(a.name, textX + 24, textY - 1);
 
-                // Deskripsi (italic kecil)
                 g2.setFont(g2.getFont().deriveFont(Font.ITALIC, 12F));
                 g2.setColor(new Color(180, 210, 180));
                 g2.drawString(a.description, textX + 24, textY + 14);
             } else {
-                // Badge terkunci
+
                 g2.setColor(new Color(80, 80, 80));
                 g2.fillRoundRect(textX, textY - 13, 18, 16, 4, 4);
                 g2.setColor(new Color(160, 160, 160));
                 g2.drawString("?", textX + 5, textY - 1);
 
-                // Placeholder nama
                 g2.setFont(g2.getFont().deriveFont(Font.BOLD, 14F));
                 g2.setColor(new Color(130, 130, 130));
                 g2.drawString("??? (Terkunci)", textX + 24, textY - 1);
 
-                // Clue
                 g2.setFont(g2.getFont().deriveFont(Font.ITALIC, 12F));
                 g2.setColor(new Color(180, 165, 100));
                 g2.drawString("Petunjuk: " + a.clue, textX + 24, textY + 14);
@@ -1044,7 +997,6 @@ public class UserInterface {
             textY += lineH;
         }
 
-        // Footer hint
         g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 14F));
         g2.setColor(new Color(160, 160, 160));
         String hint = "[ESC] Kembali";
@@ -1064,9 +1016,15 @@ public class UserInterface {
 
         this.g2.setFont(this.g2.getFont().deriveFont(Font.BOLD, 26F));
         String reason = this.gp.getFarmState().getLastNotification();
-        String subtitle = "Yah Kamu Cupu sih, coba lagi deh!";
-        if (reason != null && reason.toLowerCase().contains("gold habis")) {
-            subtitle = "Gold Anda Habis Dasar Miskin Gausah so soan nyawit deh lu";
+        String subtitle;
+        if (reason != null
+                && (reason.toLowerCase().contains("gold habis")
+                        || reason.toLowerCase().contains("gold"))) {
+            subtitle = "Gold Anda habis! Gausah sok-sokan jadi petani sawit deh.";
+        } else if (reason != null && reason.toLowerCase().contains("disita")) {
+            subtitle = "Lahan Anda disita karena ditelantarkan. Makanya jaga kebun!";
+        } else {
+            subtitle = "Yah, kamu cupu sih. Coba lagi deh!";
         }
         int subtitleX = getXforCenteredText(subtitle);
         this.g2.setColor(new Color(255, 210, 120));
@@ -1132,7 +1090,6 @@ public class UserInterface {
         }
 
         int textX = bubbleX + 32;
-        int textY = bubbleY + 32;
         this.g2.setColor(Color.BLACK);
         this.g2.setFont(this.g2.getFont().deriveFont(Font.PLAIN, 22F));
         int displayedChars = banner.age / 2;
@@ -1236,10 +1193,58 @@ public class UserInterface {
                 textY + lineHeight * 7);
     }
 
+    private void drawAutoModeIndicator() {
+        boolean plant = this.gp.getFarmSystem().isAutoPlantEnabled();
+        boolean harvest = this.gp.getFarmSystem().isAutoHarvestEnabled();
+        boolean sell = this.gp.getFarmSystem().isAutoSellEnabled();
+
+        if (!plant && !harvest && !sell) return;
+
+        int ts = this.gp.getTileSize();
+        int padX = 10;
+        int padY = 6;
+        int lineH = 18;
+        int lines = 0;
+        if (plant) lines++;
+        if (harvest) lines++;
+        if (sell) lines++;
+
+        int boxW = ts * 5;
+        int boxH = padY * 2 + lineH * lines + (lines - 1) * 2;
+
+        int boxX = ts / 2;
+        int boxY = ts / 2 + ts * 4 + 6;
+
+        this.g2.setColor(new Color(20, 50, 20, 200));
+        this.g2.fillRoundRect(boxX, boxY, boxW, boxH, 10, 10);
+        this.g2.setColor(new Color(80, 200, 80, 200));
+        this.g2.setStroke(new BasicStroke(1.5f));
+        this.g2.drawRoundRect(boxX, boxY, boxW, boxH, 10, 10);
+
+        this.g2.setFont(this.g2.getFont().deriveFont(Font.BOLD, 13F));
+        int tx = boxX + padX;
+        int ty = boxY + padY + lineH - 4;
+
+        if (plant) {
+            this.g2.setColor(new Color(100, 220, 100));
+            this.g2.drawString("[H] Auto Tanam ON", tx, ty);
+            ty += lineH + 2;
+        }
+        if (harvest) {
+            this.g2.setColor(new Color(100, 220, 100));
+            this.g2.drawString("[K] Auto Panen ON", tx, ty);
+            ty += lineH + 2;
+        }
+        if (sell) {
+            this.g2.setColor(new Color(100, 220, 100));
+            this.g2.drawString("[J] Auto Jual ON", tx, ty);
+        }
+    }
+
     private void drawControlHint() {
         this.g2.setFont(this.g2.getFont().deriveFont(Font.PLAIN, 14F));
         String text =
-                "E/Enter: aksi kebun | F: serang | B: firebreak (-gold) | H: auto tanam | K: auto panen | J: auto jual | N: next day | Q: jual stok | P: pause";
+                "E: aksi | B: firebreak | H: auto tanam | K: auto panen | J: auto jual | N: next day | Q: jual | M: pasar | ESC: pause";
         int x = 16;
         int y = this.gp.getScreenHeight() - 18;
 

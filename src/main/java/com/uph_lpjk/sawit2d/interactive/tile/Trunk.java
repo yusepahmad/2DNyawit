@@ -20,7 +20,7 @@ public class Trunk extends InteractiveTile {
 
         this.collision = false;
 
-        // Define a smaller, more realistic solid area (centered bottom)
+        
         this.solidArea.x = 0;
         this.solidArea.y = 0;
         this.solidArea.width = 0;

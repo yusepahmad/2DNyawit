@@ -20,7 +20,5 @@ public class ObjLoudspeaker extends Entity {
     }
 
     @Override
-    public void use(Entity entity) {
-        // Equipping the loudspeaker — no consume action needed
-    }
+    public void use(Entity entity) {}
 }

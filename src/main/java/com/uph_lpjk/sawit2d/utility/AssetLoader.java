@@ -17,10 +17,8 @@ public class AssetLoader {
             return createPlaceholder(width, height);
         }
 
-        // Ensure the path ends with .png
         String fullPath = imagePath.endsWith(".png") ? imagePath : imagePath + ".png";
 
-        // Ensure the path starts with /
         String resourcePath = fullPath.startsWith("/") ? fullPath : "/" + fullPath;
 
         try (InputStream inputStream = getClass().getResourceAsStream(resourcePath)) {

@@ -21,7 +21,6 @@ public class FireFighter extends Entity {
         this.targetY = targetY;
         this.targetTile = targetTile;
 
-        // Start at player's position
         setWorldX(gp.getPlayerWorldX());
         setWorldY(gp.getPlayerWorldY());
         setSpeed(4);
@@ -44,7 +43,7 @@ public class FireFighter extends Entity {
 
     @Override
     public Color getParticleColor() {
-        return new Color(0, 150, 255); // Water blue
+        return new Color(0, 150, 255);
     }
 
     @Override
@@ -67,7 +66,6 @@ public class FireFighter extends Entity {
         if (extinguishing) {
             extinguishCounter++;
 
-            // Wiggle animation
             if (extinguishCounter % 5 == 0) {
                 if (spriteNum == 1) {
                     spriteNum = 2;
@@ -76,20 +74,18 @@ public class FireFighter extends Entity {
                 }
             }
 
-            // Water particles and splash sound
             if (extinguishCounter % 15 == 0) {
                 generateParticle(this, this);
             }
 
             if (extinguishCounter > 60) {
                 targetTile.extinguish();
-                gp.playSoundEffect(3); // Extinguish sound
+                gp.playSoundEffect(3);
                 setAlive(false);
             }
             return;
         }
 
-        // Move towards target
         int diffX = targetX - getWorldX();
         int diffY = targetY - getWorldY();
 
@@ -110,7 +106,7 @@ public class FireFighter extends Entity {
                 setDirection("up");
             }
         } else {
-            // Reached target
+
             extinguishing = true;
         }
 

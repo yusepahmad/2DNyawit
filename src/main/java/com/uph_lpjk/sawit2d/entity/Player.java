@@ -35,7 +35,6 @@ public class Player extends Entity {
         this.screenX = this.screenWidth / 2 - (this.tileSize / 2);
         this.screenY = this.screenHeight / 2 - (this.tileSize / 2);
 
-        // SOLID AREA
         this.solidArea = new Rectangle();
         this.solidArea.x = 8;
         this.solidArea.y = 16;
@@ -133,7 +132,6 @@ public class Player extends Entity {
         setSpeed(3);
         setDirection("down");
 
-        // Player Status
         maxLife = 6;
         life = maxLife;
         gold = 1000;
@@ -154,13 +152,13 @@ public class Player extends Entity {
 
     private void getPlayerImage() {
         mainCharacter = setupImage("/player/walking/rat", this.tileSize, this.tileSize);
-        // Use rat-back for up (walking away) and rat-up for second frame animation
+
         up1 = setupImage("/player/walking/rat-back", this.tileSize, this.tileSize);
         up2 = setupImage("/player/walking/rat-up", this.tileSize, this.tileSize);
-        // Use rat (front-facing) and rat-down for alternating down frames
+
         down1 = setupImage("/player/walking/rat-down-1", this.tileSize, this.tileSize);
         down2 = setupImage("/player/walking/rat-down-2", this.tileSize, this.tileSize);
-        // Use proper left/right directional sprites for side movement
+
         left1 = setupImage("/player/walking/rat-left", this.tileSize, this.tileSize);
         left2 = setupImage("/player/walking/rat-run-to-left", this.tileSize, this.tileSize);
         right1 = setupImage("/player/walking/rat-right", this.tileSize, this.tileSize);
@@ -172,19 +170,15 @@ public class Player extends Entity {
         if (currentWeapon.getType() == Type.AXE || currentWeapon.getType() == Type.EQUIPMENT) {
             int ts = this.gp.getTileSize();
 
-            // Down attack: mouse_kapak_bawah.png
             this.attackDown1 = setupImage("/player/attacks/rat-axe-down-1", ts, ts);
             this.attackDown2 = setupImage("/player/attacks/rat-axe-down-2", ts, ts);
 
-            // Up attack: rat_axe_up.png
             this.attackUp1 = setupImage("/player/attacks/rat-axe-up-1", ts, ts);
             this.attackUp2 = setupImage("/player/attacks/rat-axe-up-2", ts, ts);
 
-            // Left attack: 2-frame animation
             this.attackLeft1 = setupImage("/player/attacks/rat-axe-left-1", ts, ts);
             this.attackLeft2 = setupImage("/player/attacks/rat-axe-left-2", ts, ts);
 
-            // Right attack: 2-frame animation
             this.attackRight1 = setupImage("/player/attacks/rat-axe-right-1", ts, ts);
             this.attackRight2 = setupImage("/player/attacks/rat-axe-right-2", ts, ts);
         }
@@ -198,8 +192,7 @@ public class Player extends Entity {
                 || this.keyH.getDownPressed() == true
                 || this.keyH.getLeftPressed() == true
                 || this.keyH.getRightPressed() == true
-                || this.keyH.getActionPressed() == true // Enter acts as Interact/Attack
-        ) {
+                || this.keyH.getActionPressed() == true) {
             if (this.keyH.getUpPressed() == true) {
                 setDirection("up");
             } else if (this.keyH.getDownPressed() == true) {
@@ -210,21 +203,16 @@ public class Player extends Entity {
                 setDirection("right");
             }
 
-            // CHECK TILE COLLISION
             setCollisionOn(false);
             this.gp.checkTile(this);
 
-            // CHECK OBJECT COLLISION
             int objectIndex = this.gp.getCheckObject(this, true);
             pickUpObject(objectIndex);
 
-            // CHECK INTERACTIVE TILE COLLISION (Branch A)
             int iTileIndex = this.gp.getCheckInteractiveTile(this, this.gp.getInteractiveTile());
 
-            // CHECK EVENT (Branch A)
             this.gp.getEventHandlerCheckEvent();
 
-            // IF COLLISION IS FALSE, PLAYER CAN MOVE
             if (getCollisionOn() == false && this.keyH.getActionPressed() == false) {
                 switch (getDirection()) {
                     case "up":
@@ -242,8 +230,6 @@ public class Player extends Entity {
                 }
             }
 
-            // Logic for Attacking (Branch A) vs Interacting (Branch B)
-            // If enter is pressed and we are NOT interacting with a Farm Plot, trigger attack
             if (this.keyH.getActionPressed() == true
                     && this.attackCanceled == false
                     && this.currentWeapon != null) {
@@ -279,7 +265,6 @@ public class Player extends Entity {
         if (this.spriteCounter > 5 && this.spriteCounter <= 15) {
             this.spriteNum = 2;
 
-            // Define attack box in world coordinates
             int worldX = getWorldX();
             int worldY = getWorldY();
             java.awt.Rectangle attackBox = new java.awt.Rectangle();
@@ -407,16 +392,16 @@ public class Player extends Entity {
         int ts = this.tileSize;
         BufferedImage kapak = setupImage("/player/walking/rat-axe", ts, ts);
         mainCharacter = kapak;
-        // down: dua frame yang sama karena tidak ada sprite jalan bawah+kapak lain
+
         down1 = kapak;
         down2 = kapak;
-        // up: walking atas biasa (sudah smooth)
+
         up1 = setupImage("/player/walking/rat-back", ts, ts);
         up2 = setupImage("/player/walking/rat-up", ts, ts);
-        // kiri: frame1=bawa kapak sambil jalan, frame2=langkah lari biasa → smooth walk
+
         left1 = setupImage("/player/attacks/rat-axe-left-2", ts, ts);
         left2 = setupImage("/player/attacks/rat-axe-left-2", ts, ts);
-        // kanan: frame1=bawa kapak sambil jalan, frame2=langkah lari biasa → smooth walk
+
         right1 = setupImage("/player/attacks/rat-axe-right-2", ts, ts);
         right2 = setupImage("/player/attacks/rat-axe-right-2", ts, ts);
     }
@@ -428,7 +413,6 @@ public class Player extends Entity {
         if (selectedItem.getType() == Entity.Type.EQUIPMENT
                 || selectedItem.getType() == Entity.Type.AXE) {
 
-            // Toggle unequip: klik item yang sudah equipped → lepas
             if (this.currentWeapon == selectedItem) {
                 this.currentWeapon = null;
                 this.attack = 0;
@@ -472,7 +456,7 @@ public class Player extends Entity {
 
     public void pickUpObject(int i) {
         if (i != 999) {
-            // PICKUP ONLY ITEMS (Unified type check)
+
             if (this.gp.getObject(i).getType() == Type.PICKUP_ONLY) {
                 this.gp.setObjectUse(i, this);
                 this.gp.setObject(i, null);

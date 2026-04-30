@@ -32,11 +32,9 @@ public class Entity {
 
     protected int spriteNum = 1;
 
-    // COUNTER
     protected int invincibleCounter = 0;
     protected int spriteCounter = 0;
 
-    // STATE
     protected boolean collision;
     protected boolean attacking;
 
@@ -45,7 +43,6 @@ public class Entity {
     private boolean invincible = false;
     private boolean alive = true;
 
-    // ATTRIBUTES OBJECT / CHARACTER
     protected String name;
     protected int maxLife;
     protected int life;
@@ -54,14 +51,12 @@ public class Entity {
     protected int attack;
     protected Entity currentWeapon;
 
-    // ITEM ATTRIBUTES
     protected String description;
     protected int attackValue;
     protected int value;
     public int amount = 1;
     public boolean stackable = false;
 
-    // TYPE
     public enum Type {
         PLAYER,
         NPC,
@@ -217,7 +212,6 @@ public class Entity {
         this.alive = alive;
     }
 
-    // OBJECT ATTRIBUTE
     public void setName(String name) {
         this.name = name;
     }
@@ -246,7 +240,6 @@ public class Entity {
         return this.currentWeapon;
     }
 
-    // RPG ATTRIBUTES (Restored from Branch A)
     public int getStrength() {
         return strength;
     }
@@ -271,7 +264,6 @@ public class Entity {
         this.maxLife = maxLife;
     }
 
-    // TYPE
     public Type getType() {
         return this.type;
     }
@@ -280,7 +272,6 @@ public class Entity {
         this.type = type;
     }
 
-    // ITEM ATTRIBUTE
     public void setDescription(String description) {
         this.description = description;
     }
@@ -383,16 +374,7 @@ public class Entity {
                 image = this.down1;
             }
 
-            // if (type == Type.HOME) {
-            //     g2.drawImage(getTopLeftImage(), screenX, screenY, null);
-            //     g2.drawImage(getTopRightImage(), screenX + this.gp.getTileSize(), screenY, null);
-            //     g2.drawImage(getBottomLeftImage(), screenX, screenY + this.gp.getTileSize(),
-            // null);
-            //     g2.drawImage(getBottomRightImage(), screenX + this.gp.getTileSize(), screenY +
-            // this.gp.getTileSize(), null);
-            // } else {
             g2.drawImage(image, screenX, screenY, null);
-            // }
         }
     }
 

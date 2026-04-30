@@ -27,39 +27,34 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 public class GamePanel extends JPanel implements Runnable {
-    // SCREEN SETTINGS
+
     private final int ORIGINAL_TILE_SIZE = 16;
     private final int SCALE = 3;
 
-    private final int TILE_SIZE = ORIGINAL_TILE_SIZE * SCALE; // 48 * 48
+    private final int TILE_SIZE = ORIGINAL_TILE_SIZE * SCALE;
     private final int MAX_SCREEN_COL = 20;
     private final int MAX_SCREEN_ROW = 12;
-    private final int SCREEN_WIDTH = (TILE_SIZE * MAX_SCREEN_COL); // 960 px
-    private final int SCREEN_HEIGHT = (TILE_SIZE * MAX_SCREEN_ROW); // 576 px
+    private final int SCREEN_WIDTH = (TILE_SIZE * MAX_SCREEN_COL);
+    private final int SCREEN_HEIGHT = (TILE_SIZE * MAX_SCREEN_ROW);
 
-    // WORLD SETTINGS
     private final int MAX_WORLD_COL = 50;
     private final int MAX_WORLD_ROW = 50;
     private final int WORLD_WIDTH = TILE_SIZE * MAX_WORLD_COL;
     private final int WORLD_HEIGHT = TILE_SIZE * MAX_WORLD_ROW;
 
-    // FOR FULL SCREEN
     private int screenWidth2 = SCREEN_WIDTH;
     private int screenHeight2 = SCREEN_HEIGHT;
     private BufferedImage tempScreen;
     private Graphics2D g2;
     private boolean fullScreenOn = false;
 
-    // WINDOW SCALE: 0=Normal(960x576), 1=Large(1440x864), 2=Fullscreen
     public static final String[] WINDOW_SCALE_LABELS = {"Normal", "Large", "Fullscreen"};
     private int windowScaleIndex = 0;
 
-    // FPS
     private final int FPS = 60;
 
     Thread gamThread;
 
-    // INIT CONTROLLER
     Sound music = new Sound();
     Sound se = new Sound();
     private final KeyHandler keyH = new KeyHandler(this);
@@ -69,11 +64,9 @@ public class GamePanel extends JPanel implements Runnable {
     private final FarmSystem farmSystem = new FarmSystem(this);
     private final AchievementManager achievements = new AchievementManager();
 
-    // Loudspeaker state
     private boolean loudspeakerEquipped = false;
     private int treeChopCount = 0;
 
-    // ENTITY AND OBJECT
     private final Player player = new Player(this, keyH);
     private final Entity obj[] = new Entity[20];
 
@@ -85,7 +78,6 @@ public class GamePanel extends JPanel implements Runnable {
     private final CollisionChecker cChecker = new CollisionChecker(this);
     private final TileManager tileM = new TileManager(this);
 
-    // GAME STATE
     public enum State {
         LOADING,
         TITLE,
@@ -123,8 +115,6 @@ public class GamePanel extends JPanel implements Runnable {
         this.setFocusable(true);
     }
 
-    // GETTER & SETTER
-
     public int getTileSize() {
         return this.TILE_SIZE;
     }
@@ -153,17 +143,14 @@ public class GamePanel extends JPanel implements Runnable {
         return this.WORLD_HEIGHT;
     }
 
-    // KEYHANDLER
     public void setKeyHActionPressed(boolean pressed) {
         this.keyH.setActionPressed(pressed);
     }
 
-    // EVENT HANDLER
     public void getEventHandlerCheckEvent() {
         this.eHandler.checkEvent();
     }
 
-    // USER INTERFACE
     public UserInterface getUserInterface() {
         return this.ui;
     }
@@ -223,7 +210,6 @@ public class GamePanel extends JPanel implements Runnable {
         return this.ui.getSelectedItem();
     }
 
-    // PLAYER
     public int getPlayerWorldX() {
         return this.player.getWorldX();
     }
@@ -282,7 +268,7 @@ public class GamePanel extends JPanel implements Runnable {
 
     public void setPlayerGold(int gold) {
         this.player.setGold(gold);
-        if (this.player.getGold() < 0 && this.gameState != State.GAME_OVER) {
+        if (this.player.getGold() <= 0 && this.gameState != State.GAME_OVER) {
             setGameOver("Gold habis. Game over.");
         }
     }
@@ -314,8 +300,6 @@ public class GamePanel extends JPanel implements Runnable {
     public void setPlayerSelectItem() {
         this.player.selectItem();
     }
-
-    // FARM
 
     public FarmSystem getFarmSystem() {
         return this.farmSystem;
@@ -377,8 +361,6 @@ public class GamePanel extends JPanel implements Runnable {
         this.requestFocusInWindow();
         if (gameState == null) return;
 
-        // Map panel-space mouse coords to game-space (960x576), accounting for
-        // black bars so clicks in the letterbox/pillarbox area are clamped to edge.
         int[] b = getDrawBounds();
         int gameX = (int) ((e.getX() - b[0]) * SCREEN_WIDTH / (double) b[2]);
         int gameY = (int) ((e.getY() - b[1]) * SCREEN_HEIGHT / (double) b[3]);
@@ -401,7 +383,6 @@ public class GamePanel extends JPanel implements Runnable {
         }
     }
 
-    // TILE MANAGER
     public TileManager getTileManager() {
         return this.tileM;
     }
@@ -418,7 +399,6 @@ public class GamePanel extends JPanel implements Runnable {
         return this.tileM.getTileCollision(i);
     }
 
-    // INTERACTIVE TILE
     public InteractiveTile[] getInteractiveTile() {
         return this.iTile;
     }
@@ -465,13 +445,12 @@ public class GamePanel extends JPanel implements Runnable {
 
     public boolean getInteractiveTileInvicible(int i) {
         return this.iTile[i].getInvincible();
-    } // Typo sync
+    }
 
     public InteractiveTile getInteractiveTileDestroyForm(int i) {
         return this.iTile[i].getDestroyForm();
     }
 
-    // ENTITY OBJECT
     public int getObjectLength() {
         return this.obj.length;
     }
@@ -534,7 +513,6 @@ public class GamePanel extends JPanel implements Runnable {
         return this.obj[i].getSolidAreaDefaultY();
     }
 
-    // COLLISION CHECKER
     public int getCheckObject(Entity entity, boolean player) {
         return this.cChecker.checkObject(entity, player);
     }
@@ -555,7 +533,6 @@ public class GamePanel extends JPanel implements Runnable {
         this.cChecker.checkTile(entity);
     }
 
-    // GAME STATE
     public void setGameState(State state) {
         this.gameState = state;
     }
@@ -567,7 +544,7 @@ public class GamePanel extends JPanel implements Runnable {
     public void setGameOver(String reason) {
         this.gameState = State.GAME_OVER;
         this.farmSystem.getGameState().setLastNotification(reason);
-        this.ui.addMessage(reason);
+        this.ui.resetNotifications();
         this.stopMusic();
     }
 
@@ -587,7 +564,6 @@ public class GamePanel extends JPanel implements Runnable {
         this.gameState = State.TITLE;
     }
 
-    // PARTICLE
     public void addParticleList(Entity particle) {
         this.particleList.add(particle);
     }
@@ -617,7 +593,7 @@ public class GamePanel extends JPanel implements Runnable {
         this.loadingCounter = 0;
         tempScreen = new BufferedImage(SCREEN_WIDTH, SCREEN_HEIGHT, BufferedImage.TYPE_INT_ARGB);
         g2 = (Graphics2D) tempScreen.getGraphics();
-        // Wire achievement manager to UI so it can push banners
+
         this.achievements.setUI(this.ui);
     }
 
@@ -687,18 +663,21 @@ public class GamePanel extends JPanel implements Runnable {
         }
 
         if (this.gameState == GamePanel.State.PLAY) {
+            if (this.player.getGold() <= 0) {
+                setGameOver("Gold habis. Game over.");
+                return;
+            }
+
             if (this.ui.isDialogActive()) {
                 return;
             }
-            // ACHIEVEMENTS: survival timer + gold check (every 60 frames ~= 1 sec)
+
             this.achievements.startSurvivalTimer();
             this.achievements.checkSurvivalTimer();
             this.achievements.onGoldCheck(this.player.getGold());
 
-            // PLAYER
             player.update();
 
-            // FARM SYSTEM
             if (this.keyH.consumeAutoPlantPressed()) this.farmSystem.toggleAutoPlantMode();
             if (this.keyH.consumeAutoSellPressed()) this.farmSystem.toggleAutoSellMode();
             if (this.keyH.consumeAutoHarvestPressed()) this.farmSystem.toggleAutoHarvestMode();
@@ -713,7 +692,6 @@ public class GamePanel extends JPanel implements Runnable {
 
             this.farmSystem.update();
 
-            // NPC
             for (int i = 0; i < this.npcList.size(); i++) {
                 if (this.npcList.get(i) != null) {
                     if (this.npcList.get(i).getAlive() == true) {
@@ -730,7 +708,6 @@ public class GamePanel extends JPanel implements Runnable {
                 if (this.iTile[i] != null) this.iTile[i].update();
             }
 
-            // PARTICLE
             for (int i = 0; i < this.particleList.size(); i++) {
                 if (this.particleList.get(i) != null) {
                     if (this.particleList.get(i).getAlive() == true)
@@ -752,16 +729,13 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void drawToTempScreen() {
-        // TILE
+
         tileM.draw(g2);
 
-        // FARM SYSTEM
         this.farmSystem.draw(g2);
 
-        // MAP OBJECTS
         tileM.drawObjectLayer(g2);
 
-        // ADD ENTITY TO THE LIST
         this.entityList.add(this.player);
         for (int i = 0; i < this.obj.length; i++) {
             if (this.obj[i] != null) this.entityList.add(this.obj[i]);
@@ -776,7 +750,6 @@ public class GamePanel extends JPanel implements Runnable {
             if (this.particleList.get(i) != null) this.entityList.add(this.particleList.get(i));
         }
 
-        // SORT
         Collections.sort(
                 entityList,
                 new Comparator<Entity>() {
@@ -786,23 +759,18 @@ public class GamePanel extends JPanel implements Runnable {
                     }
                 });
 
-        // DRAW ENTITY LIST
         for (int i = 0; i < this.entityList.size(); i++) {
             this.entityList.get(i).draw(g2);
         }
 
-        // RAIN ATMOSPHERE (over the entire world)
         this.farmSystem.drawDarknessOverlay(g2);
 
-        // RAIN PARTICLES (on top of the darkened world)
         this.farmSystem.drawRainParticles(g2);
 
         this.ui.draw(g2);
 
-        // EMPTY ENTITY LIST
         this.entityList.clear();
 
-        // DEBUG
         if (this.keyH.getShowDebugText() == true) {
             g2.setFont(new Font("Arial", Font.PLAIN, 20));
             g2.setColor(Color.white);
@@ -829,9 +797,7 @@ public class GamePanel extends JPanel implements Runnable {
         if (g == null || tempScreen == null) return;
         int[] b = getDrawBounds();
         int drawX = b[0], drawY = b[1], drawW = b[2], drawH = b[3];
-        // Only fill the pillarbox/letterbox bands — never clear the game area.
-        // getGraphics() is an unbuffered path: fillRect+drawImage are not atomic,
-        // so clearing the full screen causes a black flash every frame (flicker).
+
         if (drawX > 0 || drawY > 0) {
             int pw = getWidth(), ph = getHeight();
             g.setColor(Color.BLACK);
@@ -850,8 +816,7 @@ public class GamePanel extends JPanel implements Runnable {
 
     @Override
     public void paintComponent(Graphics g) {
-        // super.paintComponent fills the component background (Color.black set in constructor),
-        // then Swing flips its double-buffer atomically — no flicker risk here.
+
         super.paintComponent(g);
         if (tempScreen == null) return;
         int[] b = getDrawBounds();

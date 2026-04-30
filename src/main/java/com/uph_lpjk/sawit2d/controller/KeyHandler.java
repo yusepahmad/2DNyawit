@@ -97,7 +97,6 @@ public class KeyHandler implements KeyListener {
     public void keyPressed(KeyEvent e) {
         int code = e.getKeyCode();
 
-        // Space menutup notifikasi di state mana pun tanpa mengganggu tombol lain
         if (code == KeyEvent.VK_SPACE && this.gp.getUserInterface().isDialogActive()) {
             this.gp.getUserInterface().interactDialog();
             this.gp.playSoundEffect(9);
@@ -131,7 +130,7 @@ public class KeyHandler implements KeyListener {
         int commandNum = gp.getUICommandNum();
 
         if (subState == 0) {
-            // MAIN MARKET MENU — 4 options: 0=Seeds, 1=Loudspeaker, 2=Sell, 3=Exit
+
             if (code == KeyEvent.VK_W) {
                 gp.setUICommandNum(commandNum - 1);
                 if (gp.getUICommandNum() < 0) gp.setUICommandNum(3);
@@ -144,18 +143,18 @@ public class KeyHandler implements KeyListener {
             }
             if (code == KeyEvent.VK_ENTER) {
                 switch (commandNum) {
-                    case 0: // Buy Seeds
+                    case 0:
                         gp.getUserInterface().setSubState(1);
                         gp.getUserInterface().setBuyQty(1);
                         break;
-                    case 1: // Buy Loudspeaker
+                    case 1:
                         buyLoudspeaker();
                         break;
-                    case 2: // Sell Harvest
+                    case 2:
                         gp.getUserInterface().setSubState(2);
                         gp.getUserInterface().setSellQty(1);
                         break;
-                    case 3: // Exit
+                    case 3:
                         gp.setGameState(GamePanel.State.PLAY);
                         gp.setUICommandNum(0);
                         break;
@@ -168,7 +167,7 @@ public class KeyHandler implements KeyListener {
                 gp.playSoundEffect(9);
             }
         } else if (subState == 1) {
-            // BUY QUANTITY SELECTION (seeds)
+
             if (code == KeyEvent.VK_W || code == KeyEvent.VK_D) {
                 gp.getUserInterface().setBuyQty(gp.getUserInterface().getBuyQty() + 1);
                 gp.playSoundEffect(9);
@@ -199,7 +198,7 @@ public class KeyHandler implements KeyListener {
                 gp.playSoundEffect(9);
             }
         } else if (subState == 2) {
-            // SELL QUANTITY SELECTION
+
             int maxSell = gp.getFarmState().getInventory();
             if (code == KeyEvent.VK_W || code == KeyEvent.VK_D) {
                 int next = gp.getUserInterface().getSellQty() + 1;
@@ -210,7 +209,7 @@ public class KeyHandler implements KeyListener {
                 gp.getUserInterface().setSellQty(gp.getUserInterface().getSellQty() - 1);
                 gp.playSoundEffect(9);
             }
-            if (code == KeyEvent.VK_F) { // Sell All
+            if (code == KeyEvent.VK_F) {
                 gp.getUserInterface().setSellQty(maxSell);
                 gp.playSoundEffect(9);
             }
@@ -258,8 +257,6 @@ public class KeyHandler implements KeyListener {
                 this.gp.getAchievements().resetAll();
                 this.gp.setGameState(GamePanel.State.PLAY);
                 gp.playMusic(0);
-                this.gp.addUIMessage(
-                        "Halo bos! Kenalin, saya manajer lahan baru di sini. Jas udah rapi, sepatu udah kinclong, tinggal nunggu instruksi bos buat nanem aja nih!");
             }
             if (this.gp.getUICommandNum() == 2) System.exit(0);
         }
@@ -282,13 +279,11 @@ public class KeyHandler implements KeyListener {
         if (code == KeyEvent.VK_A) this.leftPressed = true;
         if (code == KeyEvent.VK_D) this.rightPressed = true;
 
-        // INTERACTION (E or ENTER)
         if (code == KeyEvent.VK_ENTER || code == KeyEvent.VK_E) {
             this.enterPressed = true;
             this.actionPressed = true;
         }
 
-        // ATTACK (F) — or loudspeaker sound 1 if equipped
         if (code == KeyEvent.VK_F) {
             if (this.gp.isLoudspeakerEquipped()) {
                 LoudspeakerSound.playResource("/sounds/hey-antek-antek-asing-prabowo.wav");
@@ -299,7 +294,6 @@ public class KeyHandler implements KeyListener {
             }
         }
 
-        // LOUDSPEAKER sound 2 (G)
         if (code == KeyEvent.VK_G && this.gp.isLoudspeakerEquipped()) {
             LoudspeakerSound.playFile("/home/yusep/Downloads/hidup-jokowi.wav");
             this.gp.getAchievements().onLoudspeakerUsed();
@@ -329,11 +323,10 @@ public class KeyHandler implements KeyListener {
 
     private boolean isNearMarket() {
         int ts = gp.getTileSize();
-        // Use player center for more intuitive proximity detection
+
         int playerCol = (gp.getPlayer().getWorldX() + ts / 2) / ts;
         int playerRow = (gp.getPlayer().getWorldY() + ts / 2) / ts;
 
-        // Market occupies cols 10-11, rows 3-4. Check proximity to market center (10, 3).
         int marketCol = 10;
         int marketRow = 3;
 
@@ -387,7 +380,7 @@ public class KeyHandler implements KeyListener {
         }
 
         if (subState == 0) {
-            // MAIN PAUSE MENU — 6 options: Resume, Settings, Achievements, Reload, Game Menu, Exit
+
             if (code == KeyEvent.VK_W) {
                 gp.setUICommandNum(commandNum - 1);
                 if (gp.getUICommandNum() < 0) gp.setUICommandNum(5);
@@ -400,17 +393,17 @@ public class KeyHandler implements KeyListener {
             }
             if (code == KeyEvent.VK_ENTER) {
                 switch (commandNum) {
-                    case 0: // Resume
+                    case 0:
                         gp.setGameState(GamePanel.State.PLAY);
                         break;
-                    case 1: // Settings
+                    case 1:
                         gp.getUserInterface().setSubState(1);
                         gp.setUICommandNum(0);
                         break;
-                    case 2: // Achievements
+                    case 2:
                         gp.getUserInterface().setSubState(2);
                         break;
-                    case 3: // Reload Game
+                    case 3:
                         gp.getFarmSystem().resetSession();
                         gp.getAchievements().resetAll();
                         gp.loadMap();
@@ -418,23 +411,23 @@ public class KeyHandler implements KeyListener {
                         gp.getPlayer().resetToDefaultValues();
                         gp.setGameState(GamePanel.State.PLAY);
                         break;
-                    case 4: // Game Menu
+                    case 4:
                         gp.getFarmSystem().resetSession();
                         gp.getUserInterface().resetNotifications();
                         gp.setUICommandNum(0);
                         gp.setGameState(GamePanel.State.TITLE);
                         gp.stopMusic();
                         break;
-                    case 5: // Exit
+                    case 5:
                         System.exit(0);
                         break;
                 }
                 gp.playSoundEffect(9);
             }
         } else if (subState == 2) {
-            // ACHIEVEMENTS screen — ESC already handled above, nothing else needed
+
         } else if (subState == 1) {
-            // SETTINGS MENU
+
             if (code == KeyEvent.VK_W) {
                 gp.setUICommandNum(commandNum - 1);
                 if (gp.getUICommandNum() < 0) gp.setUICommandNum(3);
@@ -471,7 +464,7 @@ public class KeyHandler implements KeyListener {
             }
             if (code == KeyEvent.VK_ENTER && commandNum == 3) {
                 gp.getUserInterface().setSubState(0);
-                gp.setUICommandNum(1); // Return to 'Settings' option
+                gp.setUICommandNum(1);
                 gp.playSoundEffect(9);
             }
         }
@@ -480,7 +473,7 @@ public class KeyHandler implements KeyListener {
     private void buyLoudspeaker() {
         final int LOUDSPEAKER_COST = 1000000;
         if (this.gp.getPlayerGold() >= LOUDSPEAKER_COST) {
-            // Check if already owned
+
             if (this.gp.getPlayer().searchItemInInventory("Loudspeaker") != 999) {
                 this.gp.addUIMessage("Kamu sudah punya Loudspeaker!");
                 return;
